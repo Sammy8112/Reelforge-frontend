@@ -740,7 +740,7 @@
   }
   function closeAuth(){ authOverlay.classList.remove('active'); }
 
-  loginBtn.addEventListener('click', (e) => { e.preventDefault(); openAuth('login'); });
+  loginBtn.addEventListener('click', (e) => { e.preventDefault(); alert('DIAGNOSTIC: login clicked, supabase=' + (typeof supabase)); openAuth('login'); });
   signupBtn.addEventListener('click', (e) => { e.preventDefault(); openAuth('signup'); });
   document.getElementById('authClose').addEventListener('click', closeAuth);
   authOverlay.addEventListener('click', (e) => { if (e.target === authOverlay) closeAuth(); });
