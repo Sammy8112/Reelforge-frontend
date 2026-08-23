@@ -703,6 +703,12 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+  window.onerror = function(msg, url, line, col, error) {
+    alert('PAGE ERROR: ' + msg + ' (line ' + line + ', col ' + col + ')');
+    return false;
+  };
+</script>
+<script>
   // ---- Grab DOM elements and wire up modal open/close FIRST ----
   // (done before touching Supabase, so a failed library load can never
   // break the Log in button itself — only the actual auth calls)
