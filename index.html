@@ -702,11 +702,9 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-  // ---- Supabase setup ----
-  const SUPABASE_URL = 'https://pfadvhajdeawxemqxmsj.supabase.co';
-  const SUPABASE_ANON_KEY = 'sb_publishable_h6Az7S8QZG8SqeiGtidjhA_F77Per2G';
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
+  // ---- Grab DOM elements and wire up modal open/close FIRST ----
+  // (done before touching Supabase, so a failed library load can never
+  // break the Log in button itself — only the actual auth calls)
   const authOverlay = document.getElementById('authOverlay');
   const authTitle = document.getElementById('authTitle');
   const authError = document.getElementById('authError');
@@ -729,9 +727,14 @@
     authToggleText.textContent = mode === 'login' ? "Don't have an account?" : 'Already have an account?';
     authToggleLink.textContent = mode === 'login' ? 'Sign up' : 'Log in';
     authError.classList.remove('active');
+    authError.style.color = 'var(--signal)';
     authEmail.value = '';
     authPassword.value = '';
     authOverlay.classList.add('active');
+    if (!supabase) {
+      authError.textContent = 'Login service failed to load — check your connection and reload the page.';
+      authError.classList.add('active');
+    }
   }
   function closeAuth(){ authOverlay.classList.remove('active'); }
 
@@ -743,7 +746,22 @@
     openAuth(authMode === 'login' ? 'signup' : 'login');
   });
 
+  // ---- Now safely set up the actual Supabase client ----
+  const SUPABASE_URL = 'https://pfadvhajdeawxemqxmsj.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_h6Az7S8QZG8SqeiGtidjhA_F77Per2G';
+  let supabase = null;
+  try {
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  } catch (err) {
+    console.error('Supabase failed to initialize:', err);
+  }
+
   authSubmit.addEventListener('click', async () => {
+    if (!supabase) {
+      authError.textContent = 'Login service unavailable — reload the page and try again.';
+      authError.classList.add('active');
+      return;
+    }
     const email = authEmail.value.trim();
     const password = authPassword.value;
     authError.classList.remove('active');
@@ -814,11 +832,13 @@
     }
   }
 
-  supabase.auth.getSession().then(({ data }) => refreshAuthUI(data.session));
-  supabase.auth.onAuthStateChange((_event, session) => {
-    refreshAuthUI(session);
-    if (session) closeAuth();
-  });
+  if (supabase) {
+    supabase.auth.getSession().then(({ data }) => refreshAuthUI(data.session));
+    supabase.auth.onAuthStateChange((_event, session) => {
+      refreshAuthUI(session);
+      if (session) closeAuth();
+    });
+  }
 </script>
 
 <script>
