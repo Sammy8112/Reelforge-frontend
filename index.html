@@ -475,9 +475,15 @@
           <div class="preset" data-ratio="16:9">16:9</div>
         </div>
 
+        <label>Quality</label>
+        <div class="ratio-row" id="qualityGrid">
+          <div class="preset active" data-quality="standard" data-credits="1">Standard · 1 credit</div>
+          <div class="preset" data-quality="pro" data-credits="2">Pro · 2 credits</div>
+        </div>
+
         <button class="generate-btn" id="genBtn">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 3l14 9-14 9V3z" fill="currentColor"/></svg>
-          Generate video
+          <span id="genBtnLabel">Generate video — 1 credit</span>
         </button>
       </div>
 
@@ -550,47 +556,47 @@
   <div class="wrap">
     <div class="section-head reveal">
       <span class="tag">Pricing</span>
-      <h2>Pay for renders, not seats.</h2>
-      <p>Credits roll over. Cancel any time.</p>
+      <h2>Pay per video, or subscribe and save.</h2>
+      <p>1 credit = 1 standard video. Pro quality (4K/higher fidelity) uses 2 credits. No subscription required to start.</p>
     </div>
     <div class="pricing-grid">
       <div class="plan reveal">
-        <h3>Starter</h3>
-        <p class="desc">Try the studio properly</p>
-        <div class="price">$0<span>/mo</span></div>
+        <h3>Pay As You Go</h3>
+        <p class="desc">No subscription — one video, on the spot</p>
+        <div class="price">£2<span>/video</span></div>
         <ul>
-          <li>5 renders / month</li>
-          <li>720p export</li>
-          <li>Watermarked output</li>
+          <li>Credits never expire</li>
+          <li>10-credit pack: £16 (£1.60/credit)</li>
+          <li>720p–1080p export</li>
           <li>Standard queue</li>
         </ul>
-        <a href="#studio" class="btn btn-ghost">Start free</a>
+        <a href="#studio" class="btn btn-ghost">Buy credits</a>
       </div>
       <div class="plan featured reveal">
         <h3>Creator</h3>
         <p class="desc">For regular posting</p>
-        <div class="price">$24<span>/mo</span></div>
+        <div class="price">£31.25<span>/mo</span></div>
         <ul>
-          <li>150 renders / month</li>
+          <li>25 credits / month (£1.25/credit)</li>
           <li>1080p export</li>
           <li>No watermark</li>
           <li>Priority queue</li>
-          <li>All style presets</li>
+          <li>Unused credits roll over</li>
         </ul>
-        <a href="#studio" class="btn btn-primary">Choose Creator</a>
+        <a href="#studio" class="btn btn-primary">Subscribe</a>
       </div>
       <div class="plan reveal">
         <h3>Studio</h3>
-        <p class="desc">For teams shipping daily</p>
-        <div class="price">$79<span>/mo</span></div>
+        <p class="desc">For agencies and daily use</p>
+        <div class="price">£70<span>/mo</span></div>
         <ul>
-          <li>600 renders / month</li>
+          <li>80 credits / month (£0.875/credit)</li>
           <li>4K upscale export</li>
-          <li>Model routing controls</li>
+          <li>Priority queue</li>
           <li>API access</li>
-          <li>Shared workspace</li>
+          <li>Unused credits roll over</li>
         </ul>
-        <a href="#studio" class="btn btn-ghost">Choose Studio</a>
+        <a href="#studio" class="btn btn-ghost">Subscribe</a>
       </div>
     </div>
   </div>
@@ -639,6 +645,17 @@
   }
   wireGroup('styleGrid');
   wireGroup('ratioGrid');
+  wireGroup('qualityGrid');
+
+  // keep the generate button's credit cost in sync with the selected quality
+  const genBtnLabel = document.getElementById('genBtnLabel');
+  function updateCreditLabel(){
+    const credits = document.querySelector('#qualityGrid .preset.active').dataset.credits;
+    genBtnLabel.textContent = `Generate video — ${credits} credit${credits > 1 ? 's' : ''}`;
+  }
+  document.querySelectorAll('#qualityGrid .preset').forEach(el=>{
+    el.addEventListener('click', updateCreditLabel);
+  });
 
   // mock generation flow
   const genBtn = document.getElementById('genBtn');
@@ -654,7 +671,8 @@
 
   function resetButton(){
     genBtn.disabled = false;
-    genBtn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 3l14 9-14 9V3z" fill="currentColor"/></svg> Generate video';
+    genBtn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 3l14 9-14 9V3z" fill="currentColor"/></svg> <span id="genBtnLabel"></span>';
+    updateCreditLabel();
   }
 
   async function pollJob(jobId){
@@ -685,7 +703,10 @@
     const prompt = document.getElementById('prompt').value;
     const style = document.querySelector('#styleGrid .preset.active').dataset.style;
     const ratio = document.querySelector('#ratioGrid .preset.active').dataset.ratio;
-    resultBadge.textContent = style.toUpperCase() + ' · ' + ratio;
+    const qualityEl = document.querySelector('#qualityGrid .preset.active');
+    const quality = qualityEl.dataset.quality;
+    const credits = qualityEl.dataset.credits;
+    resultBadge.textContent = style.toUpperCase() + ' · ' + ratio + ' · ' + quality.toUpperCase();
 
     genBtn.disabled = true;
     genBtn.textContent = 'Rendering…';
@@ -698,7 +719,7 @@
       const res = await fetch(`${BACKEND_URL}/api/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, style, ratio })
+        body: JSON.stringify({ prompt, style, ratio, quality, credits })
       });
       if (!res.ok) throw new Error('Backend not reachable');
       const { jobId } = await res.json();
