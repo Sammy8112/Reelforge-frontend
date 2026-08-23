@@ -96,6 +96,11 @@
   .btn-ghost{ border-color:var(--line); color:var(--ink); }
   .btn-ghost:hover{ border-color:var(--ink-dim); }
   .hide-mobile{ display:inline-flex; }
+  .credits-badge{
+    font-family:var(--mono); font-size:13px; color:var(--ink-dim);
+    background:var(--bg-raised); border:1px solid var(--line);
+    padding:8px 14px; border-radius:8px;
+  }
   @media(max-width:720px){
     .navlinks{ display:none; }
     .hide-mobile{ display:none; }
@@ -247,6 +252,10 @@
   .preset.active{ border-color:var(--signal); color:var(--ink); background:rgba(255,59,48,0.08); }
 
   .ratio-row{ display:flex; gap:8px; }
+  .quality-desc{
+    font-family:var(--mono); font-size:11px; color:var(--ink-faint);
+    margin-top:8px; line-height:1.5;
+  }
   .ratio-row .preset{ flex:1; }
 
   .generate-btn{
@@ -389,6 +398,7 @@
         <a href="#pricing">Pricing</a>
       </div>
       <div class="navcta">
+        <span class="credits-badge hide-mobile" id="creditsBadge" title="Placeholder — real balance requires account login (not yet built)">🪙 12 credits</span>
         <a href="#studio" class="btn btn-ghost hide-mobile">Log in</a>
         <a href="#studio" class="btn btn-primary">Start generating</a>
       </div>
@@ -477,9 +487,11 @@
 
         <label>Quality</label>
         <div class="ratio-row" id="qualityGrid">
-          <div class="preset active" data-quality="standard" data-credits="1">Standard · 1 credit</div>
-          <div class="preset" data-quality="pro" data-credits="2">Pro · 2 credits</div>
+          <div class="preset active" data-quality="standard" data-credits="1" data-desc="Casual posts &amp; quick drafts — fast, lightweight, great for testing ideas.">720p · 1 credit</div>
+          <div class="preset" data-quality="pro" data-credits="2" data-desc="Everyday content — sharp enough for feeds, stories, and reels.">1080p · 2 credits</div>
+          <div class="preset" data-quality="4k" data-credits="9" data-desc="Ultra-high quality — for real ad campaigns, big screens, and client work.">4K · 9 credits</div>
         </div>
+        <p class="quality-desc" id="qualityDesc">Casual posts &amp; quick drafts — fast, lightweight, great for testing ideas.</p>
 
         <button class="generate-btn" id="genBtn">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 3l14 9-14 9V3z" fill="currentColor"/></svg>
@@ -557,7 +569,7 @@
     <div class="section-head reveal">
       <span class="tag">Pricing</span>
       <h2>Pay per video, or subscribe and save.</h2>
-      <p>1 credit = 1 standard video. Pro quality (4K/higher fidelity) uses 2 credits. No subscription required to start.</p>
+      <p>720p = 1 credit · 1080p = 2 credits · 4K = 9 credits. No subscription required to start.</p>
     </div>
     <div class="pricing-grid">
       <div class="plan reveal">
@@ -567,7 +579,9 @@
         <ul>
           <li>Credits never expire</li>
           <li>10-credit pack: £16 (£1.60/credit)</li>
-          <li>720p–1080p export</li>
+          <li>720p export (1 credit)</li>
+          <li>1080p export (2 credits)</li>
+          <li>4K export (9 credits)</li>
           <li>Standard queue</li>
         </ul>
         <a href="#studio" class="btn btn-ghost">Buy credits</a>
@@ -647,11 +661,14 @@
   wireGroup('ratioGrid');
   wireGroup('qualityGrid');
 
-  // keep the generate button's credit cost in sync with the selected quality
+  // keep the generate button's credit cost and quality description in sync
   const genBtnLabel = document.getElementById('genBtnLabel');
+  const qualityDesc = document.getElementById('qualityDesc');
   function updateCreditLabel(){
-    const credits = document.querySelector('#qualityGrid .preset.active').dataset.credits;
+    const activeEl = document.querySelector('#qualityGrid .preset.active');
+    const credits = activeEl.dataset.credits;
     genBtnLabel.textContent = `Generate video — ${credits} credit${credits > 1 ? 's' : ''}`;
+    qualityDesc.textContent = activeEl.dataset.desc;
   }
   document.querySelectorAll('#qualityGrid .preset').forEach(el=>{
     el.addEventListener('click', updateCreditLabel);
