@@ -101,6 +101,41 @@
     background:var(--bg-raised); border:1px solid var(--line);
     padding:8px 14px; border-radius:8px;
   }
+
+  /* ---------- AUTH MODAL ---------- */
+  .auth-overlay{
+    display:none; position:fixed; inset:0; z-index:200;
+    background:rgba(0,0,0,0.6); backdrop-filter:blur(4px);
+    align-items:center; justify-content:center;
+  }
+  .auth-overlay.active{ display:flex; }
+  .auth-modal{
+    background:var(--bg-raised); border:1px solid var(--line); border-radius:16px;
+    padding:32px; width:100%; max-width:360px; position:relative;
+  }
+  .auth-modal h3{ font-family:var(--display); font-size:22px; margin-bottom:18px; }
+  .auth-modal label{
+    display:block; font-family:var(--mono); font-size:11px; color:var(--ink-faint);
+    text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px; margin-top:14px;
+  }
+  .auth-modal input{
+    width:100%; background:var(--bg); border:1px solid var(--line); border-radius:8px;
+    color:var(--ink); font-family:var(--body); font-size:14px; padding:11px 12px;
+  }
+  .auth-submit{ width:100%; margin-top:20px; padding:12px; }
+  .auth-close{
+    position:absolute; top:14px; right:16px; background:none; border:none;
+    color:var(--ink-faint); font-size:22px; cursor:pointer; line-height:1;
+  }
+  .auth-toggle{
+    text-align:center; margin-top:16px; font-size:13px; color:var(--ink-faint);
+  }
+  .auth-toggle a{ color:var(--ink); text-decoration:underline; margin-left:4px; }
+  .auth-error{
+    color:var(--signal); font-size:12px; margin-bottom:4px; display:none;
+  }
+  .auth-error.active{ display:block; }
+
   @media(max-width:720px){
     .navlinks{ display:none; }
     .hide-mobile{ display:none; }
@@ -398,13 +433,31 @@
         <a href="#pricing">Pricing</a>
       </div>
       <div class="navcta">
-        <span class="credits-badge hide-mobile" id="creditsBadge" title="Placeholder — real balance requires account login (not yet built)">🪙 12 credits</span>
-        <a href="#studio" class="btn btn-ghost hide-mobile">Log in</a>
+        <span class="credits-badge hide-mobile" id="creditsBadge" style="display:none;">🪙 <span id="creditsCount">–</span> credits</span>
+        <a href="#" class="btn btn-ghost hide-mobile" id="loginBtn">Log in</a>
+        <a href="#" class="btn btn-ghost hide-mobile" id="logoutBtn" style="display:none;">Log out</a>
         <a href="#studio" class="btn btn-primary">Start generating</a>
       </div>
     </nav>
   </div>
 </header>
+
+<div class="auth-overlay" id="authOverlay">
+  <div class="auth-modal">
+    <button class="auth-close" id="authClose">&times;</button>
+    <h3 id="authTitle">Log in</h3>
+    <p class="auth-error" id="authError"></p>
+    <label>Email</label>
+    <input type="email" id="authEmail" placeholder="you@example.com">
+    <label>Password</label>
+    <input type="password" id="authPassword" placeholder="••••••••">
+    <button class="btn btn-primary auth-submit" id="authSubmit">Log in</button>
+    <p class="auth-toggle">
+      <span id="authToggleText">Don't have an account?</span>
+      <a href="#" id="authToggleLink">Sign up</a>
+    </p>
+  </div>
+</div>
 
 <section class="hero">
   <div class="wrap hero-grid">
@@ -646,6 +699,127 @@
     </div>
   </div>
 </footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // ---- Supabase setup ----
+  const SUPABASE_URL = 'https://pfadvhajdeawxemqxmsj.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_h6Az7S8QZG8SqeiGtidjhA_F77Per2G';
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const authOverlay = document.getElementById('authOverlay');
+  const authTitle = document.getElementById('authTitle');
+  const authError = document.getElementById('authError');
+  const authEmail = document.getElementById('authEmail');
+  const authPassword = document.getElementById('authPassword');
+  const authSubmit = document.getElementById('authSubmit');
+  const authToggleText = document.getElementById('authToggleText');
+  const authToggleLink = document.getElementById('authToggleLink');
+  const loginBtn = document.getElementById('loginBtn');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const creditsBadge = document.getElementById('creditsBadge');
+  const creditsCount = document.getElementById('creditsCount');
+
+  let authMode = 'login'; // or 'signup'
+
+  function openAuth(mode){
+    authMode = mode;
+    authTitle.textContent = mode === 'login' ? 'Log in' : 'Sign up';
+    authSubmit.textContent = mode === 'login' ? 'Log in' : 'Sign up';
+    authToggleText.textContent = mode === 'login' ? "Don't have an account?" : 'Already have an account?';
+    authToggleLink.textContent = mode === 'login' ? 'Sign up' : 'Log in';
+    authError.classList.remove('active');
+    authEmail.value = '';
+    authPassword.value = '';
+    authOverlay.classList.add('active');
+  }
+  function closeAuth(){ authOverlay.classList.remove('active'); }
+
+  loginBtn.addEventListener('click', (e) => { e.preventDefault(); openAuth('login'); });
+  document.getElementById('authClose').addEventListener('click', closeAuth);
+  authOverlay.addEventListener('click', (e) => { if (e.target === authOverlay) closeAuth(); });
+  authToggleLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    openAuth(authMode === 'login' ? 'signup' : 'login');
+  });
+
+  authSubmit.addEventListener('click', async () => {
+    const email = authEmail.value.trim();
+    const password = authPassword.value;
+    authError.classList.remove('active');
+
+    if (!email || !password) {
+      authError.textContent = 'Enter an email and password.';
+      authError.classList.add('active');
+      return;
+    }
+
+    authSubmit.disabled = true;
+    authSubmit.textContent = 'Please wait…';
+
+    const { error } = authMode === 'login'
+      ? await supabase.auth.signInWithPassword({ email, password })
+      : await supabase.auth.signUp({ email, password });
+
+    authSubmit.disabled = false;
+    authSubmit.textContent = authMode === 'login' ? 'Log in' : 'Sign up';
+
+    if (error) {
+      authError.textContent = error.message;
+      authError.classList.add('active');
+      return;
+    }
+
+    if (authMode === 'signup') {
+      authError.style.color = 'var(--ink-dim)';
+      authError.textContent = 'Check your email to confirm your account, then log in.';
+      authError.classList.add('active');
+      return;
+    }
+
+    closeAuth();
+  });
+
+  logoutBtn.addEventListener('click', async (e) => {
+    e.preventDefault();
+    await supabase.auth.signOut();
+  });
+
+  // ---- Fetch a user's credit balance from the profiles table ----
+  async function loadCredits(userId){
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('credits')
+      .eq('id', userId)
+      .single();
+
+    if (error || !data) {
+      creditsCount.textContent = '0';
+      return;
+    }
+    creditsCount.textContent = data.credits;
+  }
+
+  // ---- Reflect login state in the nav ----
+  async function refreshAuthUI(session){
+    if (session?.user) {
+      loginBtn.style.display = 'none';
+      logoutBtn.style.display = 'inline-flex';
+      creditsBadge.style.display = 'inline-flex';
+      loadCredits(session.user.id);
+    } else {
+      loginBtn.style.display = 'inline-flex';
+      logoutBtn.style.display = 'none';
+      creditsBadge.style.display = 'none';
+    }
+  }
+
+  supabase.auth.getSession().then(({ data }) => refreshAuthUI(data.session));
+  supabase.auth.onAuthStateChange((_event, session) => {
+    refreshAuthUI(session);
+    if (session) closeAuth();
+  });
+</script>
 
 <script>
   // preset selection
