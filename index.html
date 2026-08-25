@@ -605,7 +605,7 @@
       <div class="navcta">
         <span class="credits-badge" id="creditsBadge" style="display:none;"><span id="creditsCount">–</span> credits</span>
         <a href="#" class="btn btn-ghost" id="loginBtn" onclick="document.getElementById('authOverlay').classList.add('active');document.getElementById('authTitle').textContent='Log in';document.getElementById('authSubmit').textContent='Log in';window.authMode='login';return false;">Log in</a>
-        <span class="signup-wrap"><span class="signup-hint" id="signupHint">&#8593; 3 free credits</span><a href="#" class="btn btn-primary" id="signupBtn" onclick="document.getElementById('authOverlay').classList.add('active');document.getElementById('authTitle').textContent='Sign up';document.getElementById('authSubmit').textContent='Sign up';window.authMode='signup';return false;">Sign up</a></span>
+        <span class="signup-wrap"><span class="signup-hint" id="signupHint">&#8593; 1 free credit</span><a href="#" class="btn btn-primary" id="signupBtn" onclick="document.getElementById('authOverlay').classList.add('active');document.getElementById('authTitle').textContent='Sign up';document.getElementById('authSubmit').textContent='Sign up';window.authMode='signup';return false;">Sign up</a></span>
         <a href="#" class="btn btn-ghost" id="logoutBtn" style="display:none;" onclick="if(window.supabaseClient){window.supabaseClient.auth.signOut();}return false;">Log out</a>
         <a href="#studio" class="btn btn-primary">Start generating</a>
       </div>
@@ -745,7 +745,7 @@
         <div class="ratio-row" id="durationGrid"></div>
         <p class="quality-desc" id="qualityDesc"></p>
 
-        <p class="studio-locked" id="studioLocked">Sign up to generate — you get 3 free credits.</p>
+        <p class="studio-locked" id="studioLocked">Sign up to generate — you get 1 free credit.</p>
 
         <button class="generate-btn" id="genBtn">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 3l14 9-14 9V3z" fill="currentColor"/></svg>
