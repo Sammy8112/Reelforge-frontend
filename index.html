@@ -468,9 +468,9 @@
       </div>
       <div class="navcta">
         <span class="credits-badge hide-mobile" id="creditsBadge" style="display:none;">🪙 <span id="creditsCount">–</span> credits</span>
-        <a href="#" class="btn btn-ghost" id="loginBtn" onclick="openAuth('login'); return false;">Log in</a>
-        <a href="#" class="btn btn-primary" id="signupBtn" onclick="openAuth('signup'); return false;">Sign up</a>
-        <a href="#" class="btn btn-ghost" id="logoutBtn" style="display:none;" onclick="doLogout(); return false;">Log out</a>
+        <a href="#" class="btn btn-ghost" id="loginBtn" onclick="document.getElementById('authOverlay').classList.add('active');document.getElementById('authTitle').textContent='Log in';document.getElementById('authSubmit').textContent='Log in';window.authMode='login';return false;">Log in</a>
+        <a href="#" class="btn btn-primary" id="signupBtn" onclick="document.getElementById('authOverlay').classList.add('active');document.getElementById('authTitle').textContent='Sign up';document.getElementById('authSubmit').textContent='Sign up';window.authMode='signup';return false;">Sign up</a>
+        <a href="#" class="btn btn-ghost" id="logoutBtn" style="display:none;" onclick="if(window.supabaseClient){window.supabaseClient.auth.signOut();}return false;">Log out</a>
         <a href="#studio" class="btn btn-primary">Start generating</a>
       </div>
     </nav>
@@ -479,7 +479,7 @@
 
 <div class="auth-overlay" id="authOverlay">
   <div class="auth-modal">
-    <button class="auth-close" id="authClose">&times;</button>
+    <button class="auth-close" id="authClose" onclick="document.getElementById('authOverlay').classList.remove('active');return false;">&times;</button>
     <h3 id="authTitle">Log in</h3>
     <p class="auth-error" id="authError"></p>
     <label>Email</label>
@@ -789,16 +789,18 @@
   // ---- Now safely set up the actual Supabase client ----
   const SUPABASE_URL = 'https://pfadvhajdeawxemqxmsj.supabase.co';
   const SUPABASE_ANON_KEY = 'sb_publishable_h6Az7S8QZG8SqeiGtidjhA_F77Per2G';
-  var supabase = null;
+  // NOTE: do NOT name this 'supabase' — a top-level var of that name
+  // overwrites window.supabase (the library itself) with null.
+  var sbClient = null;
   try {
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    window.supabaseClient = supabase;
+    sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    window.supabaseClient = sbClient;
   } catch (err) {
     console.error('Supabase failed to initialize:', err);
   }
 
   authSubmit.addEventListener('click', async () => {
-    if (!supabase) {
+    if (!sbClient) {
       authError.textContent = 'Login service unavailable — reload the page and try again.';
       authError.classList.add('active');
       return;
@@ -816,12 +818,13 @@
     authSubmit.disabled = true;
     authSubmit.textContent = 'Please wait…';
 
-    const { error } = authMode === 'login'
-      ? await supabase.auth.signInWithPassword({ email, password })
-      : await supabase.auth.signUp({ email, password });
+    var mode = window.authMode || 'login';
+    const { error } = mode === 'login'
+      ? await sbClient.auth.signInWithPassword({ email, password })
+      : await sbClient.auth.signUp({ email, password });
 
     authSubmit.disabled = false;
-    authSubmit.textContent = authMode === 'login' ? 'Log in' : 'Sign up';
+    authSubmit.textContent = mode === 'login' ? 'Log in' : 'Sign up';
 
     if (error) {
       authError.textContent = error.message;
@@ -829,7 +832,7 @@
       return;
     }
 
-    if (authMode === 'signup') {
+    if (mode === 'signup') {
       authError.style.color = 'var(--ink-dim)';
       authError.textContent = 'Check your email to confirm your account, then log in.';
       authError.classList.add('active');
@@ -843,7 +846,7 @@
 
   // ---- Fetch a user's credit balance from the profiles table ----
   async function loadCredits(userId){
-    const { data, error } = await supabase
+    const { data, error } = await sbClient
       .from('profiles')
       .select('credits')
       .eq('id', userId)
@@ -872,9 +875,9 @@
     }
   }
 
-  if (supabase) {
-    supabase.auth.getSession().then(({ data }) => refreshAuthUI(data.session));
-    supabase.auth.onAuthStateChange((_event, session) => {
+  if (sbClient) {
+    sbClient.auth.getSession().then(({ data }) => refreshAuthUI(data.session));
+    sbClient.auth.onAuthStateChange((_event, session) => {
       refreshAuthUI(session);
       if (session) closeAuth();
     });
