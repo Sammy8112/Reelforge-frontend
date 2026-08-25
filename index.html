@@ -1245,6 +1245,17 @@
     imageClear.style.display = 'none';
   });
 
+  // Re-enable the generate button and restore its credit label.
+  function resetButton(){
+    genBtn.disabled = false;
+    genBtn.innerHTML =
+      '<svg width="15" height="15" viewBox="0 0 24 24" fill="none">' +
+      '<path d="M5 3l14 9-14 9V3z" fill="currentColor"/></svg> ' +
+      '<span id="genBtnLabel"></span>';
+    genBtnLabel = document.getElementById('genBtnLabel');
+    updateGenLabel();
+  }
+
   // Give credits back when a render fails, so nobody pays for nothing.
   async function refundCredits(amount){
     if (!amount || !window.supabaseClient) return;
