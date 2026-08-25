@@ -719,7 +719,7 @@
           <li>Standard queue</li>
           <li>Credits never expire</li>
         </ul>
-        <a href="#studio" class="btn btn-ghost">Buy credits</a>
+        <a href="#" class="btn btn-ghost" data-pack="payg">Buy credits</a>
       </div>
       <div class="plan featured reveal">
         <h3>Creator</h3>
@@ -731,7 +731,7 @@
           <li>Priority queue</li>
           <li>Unused credits roll over</li>
         </ul>
-        <a href="#studio" class="btn btn-primary">Subscribe</a>
+        <a href="#" class="btn btn-primary" data-pack="creator">Subscribe</a>
       </div>
       <div class="plan reveal">
         <h3>Studio</h3>
@@ -744,7 +744,7 @@
           <li>API access</li>
           <li>Unused credits roll over</li>
         </ul>
-        <a href="#studio" class="btn btn-ghost">Subscribe</a>
+        <a href="#" class="btn btn-ghost" data-pack="studio">Subscribe</a>
       </div>
     </div>
   </div>
@@ -1163,6 +1163,57 @@
       resetButton();
     }
   });
+
+  // ---- Stripe checkout ----
+  document.querySelectorAll('[data-pack]').forEach(function(btn){
+    btn.addEventListener('click', async function(e){
+      e.preventDefault();
+
+      if (!window.supabaseClient) {
+        alert('Login service unavailable — reload the page and try again.');
+        return;
+      }
+
+      var sess = await window.supabaseClient.auth.getSession();
+      if (!sess.data.session) {
+        window.openAuth('signup');
+        return;
+      }
+
+      var original = btn.textContent;
+      btn.textContent = 'Opening checkout…';
+
+      try {
+        var res = await fetch(BACKEND_URL + '/api/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            pack: btn.dataset.pack,
+            accessToken: sess.data.session.access_token
+          })
+        });
+        var data = await res.json();
+        if (data.url) {
+          window.location.href = data.url;
+        } else {
+          btn.textContent = original;
+          alert(data.error || 'Could not start checkout.');
+        }
+      } catch (err) {
+        btn.textContent = original;
+        alert('Could not reach the payment server.');
+      }
+    });
+  });
+
+  // After returning from Stripe, refresh the credit balance
+  if (window.location.search.indexOf('purchase=success') !== -1) {
+    setTimeout(async function(){
+      if (!window.supabaseClient) return;
+      var s = await window.supabaseClient.auth.getSession();
+      if (s.data.session) loadCredits(s.data.session.user.id);
+    }, 2500);
+  }
 
   // scroll reveal
   const io = new IntersectionObserver((entries)=>{
