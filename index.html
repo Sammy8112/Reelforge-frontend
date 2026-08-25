@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
 <script>
+  // Backend base URL, defined first so every later script can use it.
+  window.BACKEND_URL = 'https://reelforge-backend-production-35ae.up.railway.app';
+
   // Defined FIRST, before anything else on the page, so the nav buttons
   // always have these available no matter what fails later.
   var authMode = 'login';
@@ -1150,7 +1153,7 @@
     genLabel.textContent = 'Queued…';
 
     try {
-      const res = await fetch(`${BACKEND_URL}/api/generate`, {
+      const res = await fetch(`${window.BACKEND_URL}/api/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt, ratio, model, quality, duration, credits, image: refImageData })
@@ -1184,7 +1187,7 @@
       btn.textContent = 'Opening checkout…';
 
       try {
-        var res = await fetch(BACKEND_URL + '/api/checkout', {
+        var res = await fetch(window.BACKEND_URL + '/api/checkout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -1201,7 +1204,7 @@
         }
       } catch (err) {
         btn.textContent = original;
-        alert('Could not reach the payment server.');
+        alert('Payment server error: ' + (err && err.message ? err.message : err));
       }
     });
   });
