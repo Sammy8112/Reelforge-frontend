@@ -817,7 +817,7 @@
     authSubmit.textContent = 'Please wait…';
 
     var mode = window.authMode || 'login';
-    const { error } = mode === 'login'
+    const { data, error } = mode === 'login'
       ? await sbClient.auth.signInWithPassword({ email, password })
       : await sbClient.auth.signUp({ email, password });
 
@@ -831,8 +831,16 @@
     }
 
     if (mode === 'signup') {
+      // Supabase deliberately hides whether an email is already registered
+      // (so the form can't be used to discover who has an account). The
+      // giveaway is an empty identities array on the returned user.
+      var alreadyRegistered = data && data.user &&
+        Array.isArray(data.user.identities) && data.user.identities.length === 0;
+
       authError.style.color = 'var(--ink-dim)';
-      authError.textContent = 'Check your email to confirm your account, then log in.';
+      authError.textContent = alreadyRegistered
+        ? 'That email already has an account — try logging in instead.'
+        : 'Check your email to confirm your account, then log in.';
       authError.classList.add('active');
       return;
     }
