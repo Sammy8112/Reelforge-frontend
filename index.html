@@ -174,6 +174,22 @@
     position:absolute; top:14px; right:16px; background:none; border:none;
     color:var(--ink-faint); font-size:22px; cursor:pointer; line-height:1;
   }
+  .auth-sent{ text-align:center; padding:8px 0 4px; }
+  .auth-sent-icon{
+    font-size:30px; color:var(--signal); margin-bottom:12px; line-height:1;
+  }
+  .auth-sent h3{
+    font-family:var(--display); font-size:21px; margin-bottom:10px;
+  }
+  .auth-sent p{
+    color:var(--ink-dim); font-size:14px; line-height:1.6; margin-bottom:12px;
+  }
+  .auth-sent strong{ color:var(--ink); font-weight:600; }
+  .auth-sent-note{
+    font-size:12px !important; color:var(--ink-faint) !important;
+    border-top:1px solid var(--line); padding-top:14px; margin-bottom:0 !important;
+  }
+
   .auth-toggle{
     text-align:center; margin-top:16px; font-size:13px; color:var(--ink-faint);
   }
@@ -1030,11 +1046,25 @@
       var alreadyRegistered = data && data.user &&
         Array.isArray(data.user.identities) && data.user.identities.length === 0;
 
-      authError.style.color = 'var(--ink-dim)';
-      authError.textContent = alreadyRegistered
-        ? 'That email already has an account — try logging in instead.'
-        : 'Check your email to confirm your account, then log in.';
-      authError.classList.add('active');
+      if (alreadyRegistered) {
+        authError.style.color = 'var(--ink-dim)';
+        authError.textContent = 'That email already has an account — try logging in instead.';
+        authError.classList.add('active');
+        return;
+      }
+
+      // Replace the form with a clear "go check your inbox" state.
+      var modal = document.querySelector('.auth-modal');
+      modal.innerHTML =
+        '<button class="auth-close" onclick="document.getElementById(\'authOverlay\')' +
+        '.classList.remove(\'active\');return false;">&times;</button>' +
+        '<div class="auth-sent">' +
+        '<div class="auth-sent-icon">✉</div>' +
+        '<h3>Check your email</h3>' +
+        '<p>We\'ve sent a confirmation link to<br><strong>' + email + '</strong></p>' +
+        '<p class="auth-sent-note">Open it to activate your account, then come back and log in. ' +
+        'If it\'s not there in a minute, check your spam folder.</p>' +
+        '</div>';
       return;
     }
 
