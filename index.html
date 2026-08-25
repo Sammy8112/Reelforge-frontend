@@ -334,14 +334,20 @@
   .section-head p{ color:var(--ink-dim); font-size:16px; line-height:1.6; }
 
   /* ---------- LONGER VIDEOS NOTE ---------- */
-  .longer{ padding-top:0; padding-bottom:0; }
+  .longer{ padding-top:14px; padding-bottom:0; }
   .longer-box{
-    background:var(--bg-raised); border:1px solid var(--line);
-    border-radius:14px; padding:30px;
+    background:linear-gradient(180deg, rgba(255,59,48,0.07), var(--bg-raised) 70%);
+    border:1px solid var(--signal-dim); border-radius:16px; padding:32px;
   }
   .longer-box h3{
-    font-family:var(--display); font-size:19px; font-weight:600; margin-bottom:12px;
+    font-family:var(--display); font-size:24px; font-weight:700;
+    letter-spacing:-0.01em; margin-bottom:6px;
   }
+  .longer-eyebrow{
+    font-family:var(--mono); font-size:12px; color:var(--signal);
+    text-transform:uppercase; letter-spacing:0.08em; margin-bottom:12px;
+  }
+  .longer-box ol li::marker{ color:var(--signal); font-weight:600; }
   .longer-box p{ color:var(--ink-dim); font-size:14px; line-height:1.65; }
   .longer-box ol{ margin:16px 0 16px 18px; }
   .longer-box li{
@@ -469,6 +475,15 @@
   }
   .gen-bar{ height:3px; background:rgba(255,255,255,0.12); border-radius:2px; overflow:hidden; margin-top:8px; }
   .gen-bar i{ display:block; height:100%; width:0%; background:var(--signal); transition:width .3s linear; }
+
+  .download-btn{
+    position:absolute; top:14px; right:14px; z-index:3;
+    font-family:var(--body); font-size:12px; font-weight:600;
+    background:rgba(0,0,0,0.65); color:var(--ink);
+    border:1px solid rgba(255,255,255,0.2); border-radius:8px;
+    padding:8px 13px; cursor:pointer; backdrop-filter:blur(6px);
+  }
+  .download-btn:hover{ background:rgba(0,0,0,0.85); }
 
   .result-badge{
     position:absolute; top:14px; left:14px;
@@ -760,6 +775,7 @@
 <section class="section longer" id="longer">
   <div class="wrap">
     <div class="longer-box reveal">
+      <p class="longer-eyebrow">Tip</p>
       <h3>Making something longer than 30 seconds</h3>
       <p>A single render maxes out at 15 seconds on Seedance 2.0, or 30 on Seedance 2.5. For anything longer, make it in parts and join them up:</p>
       <ol>
@@ -1267,6 +1283,31 @@
     return pub.data.publicUrl;
   }
 
+  // Download the finished clip. Fetching it as a blob gives a proper
+  // "save" rather than navigating away; if that's blocked we open it
+  // in a new tab so it can be saved by long-pressing.
+  async function saveVideo(url, btn){
+    var original = btn.textContent;
+    btn.textContent = 'Saving…';
+    try {
+      var res = await fetch(url);
+      if (!res.ok) throw new Error('fetch failed');
+      var blob = await res.blob();
+      var objUrl = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = objUrl;
+      a.download = 'reelforge-' + Date.now() + '.mp4';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(objUrl); }, 4000);
+      btn.textContent = original;
+    } catch (err) {
+      window.open(url, '_blank');
+      btn.textContent = 'Opened — hold to save';
+    }
+  }
+
   // Re-enable the generate button and restore its credit label.
   function resetButton(){
     genBtn.disabled = false;
@@ -1305,7 +1346,10 @@
         genLabel.textContent = 'Done — press play (with sound)';
         previewCanvas.innerHTML =
           '<video src="' + job.videoUrl + '" controls playsinline ' +
-          'style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;"></video>';
+          'style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;"></video>' +
+          '<button class="download-btn" id="downloadBtn">Save video</button>';
+        var dl = document.getElementById('downloadBtn');
+        if (dl) dl.addEventListener('click', function(){ saveVideo(job.videoUrl, dl); });
         resetButton();
         return;
       }
