@@ -1229,9 +1229,9 @@
       genFill.style.width = (job.progress || 0) + '%';
 
       if (job.status === 'complete' && job.videoUrl) {
-        genLabel.textContent = 'Done — ready to download';
+        genLabel.textContent = 'Done — press play (with sound)';
         previewCanvas.innerHTML =
-          '<video src="' + job.videoUrl + '" controls autoplay loop playsinline ' +
+          '<video src="' + job.videoUrl + '" controls playsinline ' +
           'style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;"></video>';
         resetButton();
         return;
