@@ -333,6 +333,26 @@
   }
   .section-head p{ color:var(--ink-dim); font-size:16px; line-height:1.6; }
 
+  /* ---------- LONGER VIDEOS NOTE ---------- */
+  .longer{ padding-top:0; padding-bottom:0; }
+  .longer-box{
+    background:var(--bg-raised); border:1px solid var(--line);
+    border-radius:14px; padding:30px;
+  }
+  .longer-box h3{
+    font-family:var(--display); font-size:19px; font-weight:600; margin-bottom:12px;
+  }
+  .longer-box p{ color:var(--ink-dim); font-size:14px; line-height:1.65; }
+  .longer-box ol{ margin:16px 0 16px 18px; }
+  .longer-box li{
+    color:var(--ink-dim); font-size:14px; line-height:1.65; margin-bottom:8px; padding-left:4px;
+  }
+  .longer-box strong{ color:var(--ink); font-weight:600; }
+  .longer-tip{
+    border-top:1px solid var(--line); padding-top:14px; margin-top:4px;
+    font-size:13px !important; color:var(--ink-faint) !important;
+  }
+
   /* ---------- USE CASES ---------- */
   .usecases{ padding-top:80px; padding-bottom:20px; }
   .usecase-grid{
@@ -681,7 +701,7 @@
         <label for="prompt">Scene description</label>
         <textarea id="prompt" placeholder="Describe the shot — subject, setting, lighting, camera movement, mood...">A lone cyclist crossing a fog-covered bridge at dawn, cinematic, slow dolly-in</textarea>
 
-        <label for="refImage">Reference image <span style="text-transform:none;letter-spacing:0">(optional — animate a photo)</span></label>
+        <label for="refImage">Start from an image <span style="text-transform:none;letter-spacing:0">(optional — your photo becomes the first frame)</span></label>
         <div class="image-drop" id="imageDrop">
           <input type="file" id="refImage" accept="image/*" style="display:none;">
           <button type="button" class="image-pick" id="imagePick">Choose image</button>
@@ -692,8 +712,8 @@
 
         <label>Model</label>
         <div class="ratio-row" id="modelGrid">
-          <div class="preset active" data-model="seedance-2.0" data-desc="Best quality — up to 4K, clips up to 15 seconds.">Seedance 2.0</div>
-          <div class="preset" data-model="seedance-2.5" data-desc="Longer clips up to 30 seconds, at lower resolution.">Seedance 2.5</div>
+          <div class="preset active" data-model="seedance-2.0" data-desc="Best quality and the cheapest per second. Up to 4K, clips up to 15 seconds.">Seedance 2.0</div>
+          <div class="preset" data-model="seedance-2.5" data-desc="Clips up to 30 seconds, but 720p max and more per second — use it when you need the length.">Seedance 2.5</div>
         </div>
         <p class="quality-desc" id="modelDesc">Best quality — up to 4K, clips up to 15 seconds.</p>
 
@@ -733,6 +753,22 @@
           </div>
         </div>
       </div>
+    </div>
+  </div>
+</section>
+
+<section class="section longer" id="longer">
+  <div class="wrap">
+    <div class="longer-box reveal">
+      <h3>Making something longer than 30 seconds</h3>
+      <p>A single render maxes out at 15 seconds on Seedance 2.0, or 30 on Seedance 2.5. For anything longer, make it in parts and join them up:</p>
+      <ol>
+        <li>Generate your first clip and play it through to the end.</li>
+        <li>Pause on the very last frame and screenshot it.</li>
+        <li>Start a new render, upload that screenshot as the <strong>reference image</strong>, and describe what happens next.</li>
+        <li>Repeat for as many parts as you need, then join the clips in any editor — CapCut, InShot, iMovie.</li>
+      </ol>
+      <p class="longer-tip">Using the last frame as your reference keeps the scene, lighting and characters consistent, so the joins look deliberate instead of like unrelated shots.</p>
     </div>
   </div>
 </section>
@@ -1067,7 +1103,7 @@
   var MODELS = {
     'seedance-2.0': {
       label: 'Seedance 2.0',
-      desc: 'Best quality — up to 4K, clips up to 15 seconds.',
+      desc: 'Best quality and the cheapest per second. Up to 4K, clips up to 15 seconds.',
       resolutions: [
         { id: '720p',  label: '720p',  desc: 'Casual posts and quick drafts.' },
         { id: '1080p', label: '1080p', desc: 'Everyday content — feeds, stories, reels.' },
@@ -1082,7 +1118,7 @@
     },
     'seedance-2.5': {
       label: 'Seedance 2.5',
-      desc: 'Longer clips up to 30 seconds, at lower resolution.',
+      desc: 'Clips up to 30 seconds, but 720p max and more per second — use it when you need the length.',
       resolutions: [
         { id: '480p', label: '480p', desc: 'Longest clips, lowest cost. Good for story sequences.' },
         { id: '720p', label: '720p', desc: 'Sharper long-form clips, costs more per second.' }
