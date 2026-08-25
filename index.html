@@ -597,7 +597,7 @@
     <div class="studio">
       <div class="studio-controls">
         <label for="prompt">Scene description</label>
-        <textarea id="prompt" placeholder="A lone cyclist crossing a fog-covered bridge at dawn, cinematic, slow dolly-in...">A lone cyclist crossing a fog-covered bridge at dawn, cinematic, slow dolly-in</textarea>
+        <textarea id="prompt" placeholder="Describe the shot — subject, setting, lighting, camera movement, mood...">A lone cyclist crossing a fog-covered bridge at dawn, cinematic, slow dolly-in</textarea>
 
         <label for="refImage">Reference image <span style="text-transform:none;letter-spacing:0">(optional — animate a photo)</span></label>
         <div class="image-drop" id="imageDrop">
@@ -608,15 +608,12 @@
         </div>
         <img id="imagePreview" class="image-preview" style="display:none;" alt="Reference preview">
 
-        <label>Style</label>
-        <div class="preset-grid" id="styleGrid">
-          <div class="preset active" data-style="Cinematic">Cinematic</div>
-          <div class="preset" data-style="Anime">Anime</div>
-          <div class="preset" data-style="Product">Product</div>
-          <div class="preset" data-style="Documentary">Documentary</div>
-          <div class="preset" data-style="Vintage film">Vintage film</div>
-          <div class="preset" data-style="3D render">3D render</div>
+        <label>Model</label>
+        <div class="ratio-row" id="modelGrid">
+          <div class="preset active" data-model="seedance-2.0" data-desc="Best quality — up to 4K, clips up to 15 seconds.">Seedance 2.0</div>
+          <div class="preset" data-model="seedance-2.5" data-desc="Longer clips up to 30 seconds, at lower resolution.">Seedance 2.5</div>
         </div>
+        <p class="quality-desc" id="modelDesc">Best quality — up to 4K, clips up to 15 seconds.</p>
 
         <label>Aspect ratio</label>
         <div class="ratio-row" id="ratioGrid">
@@ -625,13 +622,12 @@
           <div class="preset" data-ratio="16:9">16:9</div>
         </div>
 
-        <label>Quality</label>
-        <div class="ratio-row" id="qualityGrid">
-          <div class="preset active" data-quality="standard" data-credits="1" data-desc="Casual posts &amp; quick drafts — fast, lightweight, great for testing ideas.">720p · 1 credit</div>
-          <div class="preset" data-quality="pro" data-credits="2" data-desc="Everyday content — sharp enough for feeds, stories, and reels.">1080p · 2 credits</div>
-          <div class="preset" data-quality="4k" data-credits="9" data-desc="Ultra-high quality — for real ad campaigns, big screens, and client work.">4K · 9 credits</div>
-        </div>
-        <p class="quality-desc" id="qualityDesc">Casual posts &amp; quick drafts — fast, lightweight, great for testing ideas.</p>
+        <label>Resolution</label>
+        <div class="ratio-row" id="qualityGrid"></div>
+
+        <label>Length</label>
+        <div class="ratio-row" id="durationGrid"></div>
+        <p class="quality-desc" id="qualityDesc"></p>
 
         <p class="studio-locked" id="studioLocked">Sign up to generate — you get 3 free credits.</p>
 
@@ -958,64 +954,118 @@
       });
     });
   }
-  wireGroup('styleGrid');
   wireGroup('ratioGrid');
-  wireGroup('qualityGrid');
 
-  // keep the generate button's credit cost and quality description in sync
-  const genBtnLabel = document.getElementById('genBtnLabel');
-  const qualityDesc = document.getElementById('qualityDesc');
-  function updateCreditLabel(){
-    const activeEl = document.querySelector('#qualityGrid .preset.active');
-    const credits = activeEl.dataset.credits;
-    genBtnLabel.textContent = `Generate video — ${credits} credit${credits > 1 ? 's' : ''}`;
-    qualityDesc.textContent = activeEl.dataset.desc;
+  // ---- Credit costs ----
+  // 1 credit is priced against the cost of a 5s 720p Seedance 2.0 render.
+  // Costs scale with length and resolution, so each combination has its own price.
+  var MODELS = {
+    'seedance-2.0': {
+      label: 'Seedance 2.0',
+      desc: 'Best quality — up to 4K, clips up to 15 seconds.',
+      resolutions: [
+        { id: '720p',  label: '720p',  desc: 'Casual posts and quick drafts.' },
+        { id: '1080p', label: '1080p', desc: 'Everyday content — feeds, stories, reels.' },
+        { id: '4k',    label: '4K',    desc: 'Ad campaigns, big screens, client work.' }
+      ],
+      durations: [5, 10, 15],
+      credits: {
+        '720p':  { 5: 1,  10: 2,  15: 3  },
+        '1080p': { 5: 2,  10: 4,  15: 7  },
+        '4k':    { 5: 9,  10: 18, 15: 27 }
+      }
+    },
+    'seedance-2.5': {
+      label: 'Seedance 2.5',
+      desc: 'Longer clips up to 30 seconds, at lower resolution.',
+      resolutions: [
+        { id: '480p', label: '480p', desc: 'Longest clips, lowest cost. Good for story sequences.' },
+        { id: '720p', label: '720p', desc: 'Sharper long-form clips, costs more per second.' }
+      ],
+      durations: [10, 20, 30],
+      credits: {
+        '480p': { 10: 2, 20: 3, 30: 5  },
+        '720p': { 10: 4, 20: 7, 30: 10 }
+      }
+    }
+  };
+
+  var currentModel = 'seedance-2.0';
+  var currentRes = '720p';
+  var currentDuration = 5;
+
+  var qualityGrid = document.getElementById('qualityGrid');
+  var durationGrid = document.getElementById('durationGrid');
+  var qualityDesc = document.getElementById('qualityDesc');
+  var modelDesc = document.getElementById('modelDesc');
+  var genBtnLabel = document.getElementById('genBtnLabel');
+
+  function creditsFor(model, res, dur){
+    var table = MODELS[model].credits[res];
+    return table ? table[dur] : 1;
   }
-  document.querySelectorAll('#qualityGrid .preset').forEach(el=>{
-    el.addEventListener('click', updateCreditLabel);
+
+  function updateGenLabel(){
+    var n = creditsFor(currentModel, currentRes, currentDuration);
+    genBtnLabel.textContent = 'Generate video — ' + n + ' credit' + (n > 1 ? 's' : '');
+  }
+
+  function renderDurations(){
+    var m = MODELS[currentModel];
+    durationGrid.innerHTML = '';
+    m.durations.forEach(function(d){
+      var el = document.createElement('div');
+      el.className = 'preset' + (d === currentDuration ? ' active' : '');
+      el.textContent = d + 's · ' + creditsFor(currentModel, currentRes, d) + 'cr';
+      el.addEventListener('click', function(){
+        currentDuration = d;
+        renderDurations();
+        updateGenLabel();
+      });
+      durationGrid.appendChild(el);
+    });
+  }
+
+  function renderResolutions(){
+    var m = MODELS[currentModel];
+    qualityGrid.innerHTML = '';
+    m.resolutions.forEach(function(r){
+      var el = document.createElement('div');
+      el.className = 'preset' + (r.id === currentRes ? ' active' : '');
+      el.textContent = r.label;
+      el.addEventListener('click', function(){
+        currentRes = r.id;
+        qualityDesc.textContent = r.desc;
+        renderResolutions();
+        renderDurations();
+        updateGenLabel();
+      });
+      qualityGrid.appendChild(el);
+    });
+    var active = m.resolutions.filter(function(r){ return r.id === currentRes; })[0];
+    if (active) qualityDesc.textContent = active.desc;
+  }
+
+  function selectModel(id){
+    currentModel = id;
+    var m = MODELS[id];
+    currentRes = m.resolutions[0].id;
+    currentDuration = m.durations[0];
+    modelDesc.textContent = m.desc;
+    renderResolutions();
+    renderDurations();
+    updateGenLabel();
+  }
+
+  document.querySelectorAll('#modelGrid .preset').forEach(function(el){
+    el.addEventListener('click', function(){
+      document.querySelectorAll('#modelGrid .preset').forEach(function(x){ x.classList.remove('active'); });
+      el.classList.add('active');
+      selectModel(el.dataset.model);
+    });
   });
 
-  // mock generation flow
-  const genBtn = document.getElementById('genBtn');
-  const previewEmpty = document.getElementById('previewEmpty');
-  const previewCanvas = document.getElementById('previewCanvas');
-  const genLabel = document.getElementById('genLabel');
-  const genFill = document.getElementById('genFill');
-  const resultBadge = document.getElementById('resultBadge');
-
-  // Point this at your deployed backend once it's live, e.g.
-  // 'https://reelforge-backend-production.up.railway.app'
-  const BACKEND_URL = 'https://reelforge-backend-production-35ae.up.railway.app';
-
-  function resetButton(){
-    genBtn.disabled = false;
-    genBtn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 3l14 9-14 9V3z" fill="currentColor"/></svg> <span id="genBtnLabel"></span>';
-    updateCreditLabel();
-  }
-
-  async function pollJob(jobId){
-    const res = await fetch(`${BACKEND_URL}/api/status/${jobId}`);
-    const job = await res.json();
-
-    genFill.style.width = (job.progress || 0) + '%';
-    genLabel.textContent = job.status === 'complete'
-      ? 'Done · ready to export'
-      : `Rendering… ${job.progress || 0}%`;
-
-    if (job.status === 'complete' && job.videoUrl) {
-      previewCanvas.innerHTML = `
-        <video src="${job.videoUrl}" controls autoplay loop muted
-          style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;"></video>`;
-      resetButton();
-      return;
-    }
-    if (job.status === 'error') {
-      genLabel.textContent = 'Render failed — check backend logs';
-      resetButton();
-      return;
-    }
-    setTimeout(() => pollJob(jobId), 1000);
-  }
+  selectModel('seedance-2.0');
 
   // ---- Reference image picker ----
   var refImageData = null; // base64 string when an image is chosen
@@ -1056,11 +1106,11 @@
 
   genBtn.addEventListener('click', async () => {
     const prompt = document.getElementById('prompt').value;
-    const style = document.querySelector('#styleGrid .preset.active').dataset.style;
     const ratio = document.querySelector('#ratioGrid .preset.active').dataset.ratio;
-    const qualityEl = document.querySelector('#qualityGrid .preset.active');
-    const quality = qualityEl.dataset.quality;
-    const credits = parseInt(qualityEl.dataset.credits, 10);
+    const model = currentModel;
+    const quality = currentRes;
+    const duration = currentDuration;
+    const credits = creditsFor(currentModel, currentRes, currentDuration);
 
     // Must be logged in to generate
     if (!window.supabaseClient) {
@@ -1090,7 +1140,7 @@
     // Update the badge with the new balance
     document.getElementById('creditsCount').textContent = spend.data;
 
-    resultBadge.textContent = style.toUpperCase() + ' · ' + ratio + ' · ' + quality.toUpperCase();
+    resultBadge.textContent = quality.toUpperCase() + ' · ' + ratio + ' · ' + duration + 's';
 
     genBtn.disabled = true;
     genBtn.textContent = 'Rendering…';
@@ -1103,7 +1153,7 @@
       const res = await fetch(`${BACKEND_URL}/api/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, style, ratio, quality, credits, image: refImageData })
+        body: JSON.stringify({ prompt, ratio, model, quality, duration, credits, image: refImageData })
       });
       if (!res.ok) throw new Error('Backend not reachable');
       const { jobId } = await res.json();
