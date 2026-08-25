@@ -1209,6 +1209,49 @@
     imageClear.style.display = 'none';
   });
 
+  // Give credits back when a render fails, so nobody pays for nothing.
+  async function refundCredits(amount){
+    if (!amount || !window.supabaseClient) return;
+    try {
+      var r = await window.supabaseClient.rpc('spend_credits', { amount: -amount });
+      if (!r.error && typeof r.data === 'number' && r.data >= 0) {
+        document.getElementById('creditsCount').textContent = r.data;
+      }
+    } catch (e) { /* balance refreshes on next load */ }
+  }
+
+  // Check the backend every second until the render finishes or fails.
+  async function pollJob(jobId){
+    try {
+      var res = await fetch(window.BACKEND_URL + '/api/status/' + jobId);
+      var job = await res.json();
+
+      genFill.style.width = (job.progress || 0) + '%';
+
+      if (job.status === 'complete' && job.videoUrl) {
+        genLabel.textContent = 'Done — ready to download';
+        previewCanvas.innerHTML =
+          '<video src="' + job.videoUrl + '" controls autoplay loop playsinline ' +
+          'style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;"></video>';
+        resetButton();
+        return;
+      }
+
+      if (job.status === 'error') {
+        await refundCredits(window.lastJobCredits || 0);
+        genLabel.textContent = 'Render failed: ' + (job.error || 'unknown error') + ' — credits refunded';
+        resetButton();
+        return;
+      }
+
+      genLabel.textContent = 'Rendering… ' + (job.progress || 0) + '%';
+      setTimeout(function(){ pollJob(jobId); }, 2000);
+    } catch (err) {
+      genLabel.textContent = 'Lost contact with the server while rendering.';
+      resetButton();
+    }
+  }
+
   genBtn.addEventListener('click', async () => {
     const prompt = document.getElementById('prompt').value;
     const ratio = document.querySelector('#ratioGrid .preset.active').dataset.ratio;
