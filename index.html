@@ -1,6 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>
+  // Defined FIRST, before anything else on the page, so the nav buttons
+  // always have these available no matter what fails later.
+  var authMode = 'login';
+
+  window.openAuth = function(mode){
+    var overlay = document.getElementById('authOverlay');
+    if (!overlay) return;
+    authMode = mode;
+    document.getElementById('authTitle').textContent = mode === 'login' ? 'Log in' : 'Sign up';
+    document.getElementById('authSubmit').textContent = mode === 'login' ? 'Log in' : 'Sign up';
+    document.getElementById('authToggleText').textContent = mode === 'login' ? "Don't have an account?" : 'Already have an account?';
+    document.getElementById('authToggleLink').textContent = mode === 'login' ? 'Sign up' : 'Log in';
+    var errEl = document.getElementById('authError');
+    errEl.classList.remove('active');
+    errEl.style.color = 'var(--signal)';
+    document.getElementById('authEmail').value = '';
+    document.getElementById('authPassword').value = '';
+    overlay.classList.add('active');
+    if (!window.supabaseClient) {
+      errEl.textContent = 'Login service is still loading — wait a moment and try again.';
+      errEl.classList.add('active');
+    }
+  };
+
+  window.closeAuth = function(){
+    var overlay = document.getElementById('authOverlay');
+    if (overlay) overlay.classList.remove('active');
+  };
+
+  window.doLogout = async function(){
+    if (window.supabaseClient) await window.supabaseClient.auth.signOut();
+  };
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REELFORGE — Generate video from a single line</title>
@@ -739,50 +773,6 @@
   const creditsBadge = document.getElementById('creditsBadge');
   const creditsCount = document.getElementById('creditsCount');
 
-  let authMode = 'login'; // or 'signup'
-
-  // Attached to window so inline onclick handlers can always reach it,
-  // and it looks up its own elements so it never depends on earlier code.
-  window.openAuth = function(mode){
-    var overlay = document.getElementById('authOverlay');
-    var title = document.getElementById('authTitle');
-    var submit = document.getElementById('authSubmit');
-    var toggleText = document.getElementById('authToggleText');
-    var toggleLink = document.getElementById('authToggleLink');
-    var errEl = document.getElementById('authError');
-    var emailEl = document.getElementById('authEmail');
-    var passEl = document.getElementById('authPassword');
-
-    if (!overlay) { alert('Login form not found on page.'); return; }
-
-    authMode = mode;
-    title.textContent = mode === 'login' ? 'Log in' : 'Sign up';
-    submit.textContent = mode === 'login' ? 'Log in' : 'Sign up';
-    toggleText.textContent = mode === 'login' ? "Don't have an account?" : 'Already have an account?';
-    toggleLink.textContent = mode === 'login' ? 'Sign up' : 'Log in';
-    errEl.classList.remove('active');
-    errEl.style.color = 'var(--signal)';
-    emailEl.value = '';
-    passEl.value = '';
-    overlay.classList.add('active');
-
-    if (typeof supabase === 'undefined' || !supabase) {
-      errEl.textContent = 'Login service failed to load — check your connection and reload the page.';
-      errEl.classList.add('active');
-    }
-  };
-
-  window.closeAuth = function(){
-    var overlay = document.getElementById('authOverlay');
-    if (overlay) overlay.classList.remove('active');
-  };
-
-  window.doLogout = async function(){
-    if (typeof supabase !== 'undefined' && supabase) {
-      await supabase.auth.signOut();
-    }
-  };
-
   function openAuth(mode){ return window.openAuth(mode); }
   function closeAuth(){ return window.closeAuth(); }
 
@@ -799,9 +789,10 @@
   // ---- Now safely set up the actual Supabase client ----
   const SUPABASE_URL = 'https://pfadvhajdeawxemqxmsj.supabase.co';
   const SUPABASE_ANON_KEY = 'sb_publishable_h6Az7S8QZG8SqeiGtidjhA_F77Per2G';
-  let supabase = null;
+  var supabase = null;
   try {
     supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    window.supabaseClient = supabase;
   } catch (err) {
     console.error('Supabase failed to initialize:', err);
   }
