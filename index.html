@@ -130,6 +130,20 @@
   .btn-ghost{ border-color:var(--line); color:var(--ink); }
   .btn-ghost:hover{ border-color:var(--ink-dim); }
   .hide-mobile{ display:inline-flex; }
+  .signup-wrap{ position:relative; display:inline-flex; }
+  .signup-hint{
+    position:absolute; top:100%; right:-8px; margin-top:10px;
+    white-space:nowrap; font-family:var(--mono); font-size:11px;
+    color:var(--signal); display:flex; align-items:center; gap:5px;
+    animation:hintbob 2.2s ease-in-out infinite;
+  }
+  .signup-arrow{ font-size:14px; display:inline-block; }
+  @keyframes hintbob{
+    0%,100%{ transform:translateY(0); }
+    50%{ transform:translateY(-3px); }
+  }
+  @media(max-width:720px){ .signup-hint{ display:none; } }
+
   .credits-badge{
     font-family:var(--mono); font-size:13px; color:var(--ink-dim);
     background:var(--bg-raised); border:1px solid var(--line);
@@ -311,6 +325,29 @@
   }
   textarea#prompt:focus{ border-color:var(--ink-faint); }
 
+  .image-drop{
+    display:flex; align-items:center; gap:10px;
+    border:1px dashed var(--line); border-radius:10px; padding:10px 12px;
+    background:var(--bg);
+  }
+  .image-pick{
+    background:var(--bg-raised); border:1px solid var(--line); color:var(--ink);
+    font-family:var(--body); font-size:12px; padding:7px 12px; border-radius:7px; cursor:pointer;
+  }
+  .image-pick:hover{ border-color:var(--ink-faint); }
+  .image-name{
+    font-family:var(--mono); font-size:11px; color:var(--ink-faint);
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;
+  }
+  .image-clear{
+    background:none; border:none; color:var(--ink-faint); font-size:18px;
+    cursor:pointer; line-height:1; padding:0 4px;
+  }
+  .image-preview{
+    width:100%; margin-top:10px; border-radius:10px; border:1px solid var(--line);
+    max-height:160px; object-fit:cover;
+  }
+
   .preset-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
   .preset{
     border:1px solid var(--line); background:var(--bg); border-radius:8px;
@@ -326,6 +363,12 @@
     margin-top:8px; line-height:1.5;
   }
   .ratio-row .preset{ flex:1; }
+
+  .studio-locked{
+    font-family:var(--mono); font-size:11px; color:var(--signal);
+    margin-top:20px; padding:10px 12px; border:1px solid var(--signal-dim);
+    border-radius:8px; background:rgba(255,59,48,0.06); line-height:1.5;
+  }
 
   .generate-btn{
     width:100%; margin-top:26px; padding:14px; border-radius:10px; border:none;
@@ -469,7 +512,7 @@
       <div class="navcta">
         <span class="credits-badge hide-mobile" id="creditsBadge" style="display:none;">🪙 <span id="creditsCount">–</span> credits</span>
         <a href="#" class="btn btn-ghost" id="loginBtn" onclick="document.getElementById('authOverlay').classList.add('active');document.getElementById('authTitle').textContent='Log in';document.getElementById('authSubmit').textContent='Log in';window.authMode='login';return false;">Log in</a>
-        <a href="#" class="btn btn-primary" id="signupBtn" onclick="document.getElementById('authOverlay').classList.add('active');document.getElementById('authTitle').textContent='Sign up';document.getElementById('authSubmit').textContent='Sign up';window.authMode='signup';return false;">Sign up</a>
+        <span class="signup-wrap"><span class="signup-hint" id="signupHint">3 free credits <span class="signup-arrow">&#8599;</span></span></span><a href="#" class="btn btn-primary" id="signupBtn" onclick="document.getElementById('authOverlay').classList.add('active');document.getElementById('authTitle').textContent='Sign up';document.getElementById('authSubmit').textContent='Sign up';window.authMode='signup';return false;">Sign up</a>
         <a href="#" class="btn btn-ghost" id="logoutBtn" style="display:none;" onclick="if(window.supabaseClient){window.supabaseClient.auth.signOut();}return false;">Log out</a>
         <a href="#studio" class="btn btn-primary">Start generating</a>
       </div>
@@ -499,7 +542,7 @@
     <div>
       <div class="eyebrow">Text / image → video</div>
       <h1>Describe the shot.<br>Skip the <em>shoot</em>.</h1>
-      <p class="lead">Type a scene, pick a look, get a clip. REELFORGE turns a single line of description into finished video — no camera, no cast, no editing timeline.</p>
+      <p class="lead">Type a scene, pick a look, get a clip. REELFORGE runs on Seedance 2.0 — the strongest AI video model available right now — turning a single line of description into finished video. No camera, no cast, no editing timeline.</p>
       <div class="hero-actions">
         <a href="#studio" class="btn btn-primary btn-lg">Try the studio — free</a>
         <a href="#gallery" class="btn btn-ghost btn-lg">See what it makes</a>
@@ -536,7 +579,7 @@
 
 <div class="trustbar">
   <div class="wrap">
-    <p>Runs on frontier video models</p>
+    <p>Powered by Seedance 2.0 — the strongest AI video model available</p>
     <div class="brands">
       <span>Kling</span><span>Veo</span><span>Runway</span><span>Seedance</span>
     </div>
@@ -555,6 +598,15 @@
       <div class="studio-controls">
         <label for="prompt">Scene description</label>
         <textarea id="prompt" placeholder="A lone cyclist crossing a fog-covered bridge at dawn, cinematic, slow dolly-in...">A lone cyclist crossing a fog-covered bridge at dawn, cinematic, slow dolly-in</textarea>
+
+        <label for="refImage">Reference image <span style="text-transform:none;letter-spacing:0">(optional — animate a photo)</span></label>
+        <div class="image-drop" id="imageDrop">
+          <input type="file" id="refImage" accept="image/*" style="display:none;">
+          <button type="button" class="image-pick" id="imagePick">Choose image</button>
+          <span class="image-name" id="imageName">No image — text only</span>
+          <button type="button" class="image-clear" id="imageClear" style="display:none;">&times;</button>
+        </div>
+        <img id="imagePreview" class="image-preview" style="display:none;" alt="Reference preview">
 
         <label>Style</label>
         <div class="preset-grid" id="styleGrid">
@@ -580,6 +632,8 @@
           <div class="preset" data-quality="4k" data-credits="9" data-desc="Ultra-high quality — for real ad campaigns, big screens, and client work.">4K · 9 credits</div>
         </div>
         <p class="quality-desc" id="qualityDesc">Casual posts &amp; quick drafts — fast, lightweight, great for testing ideas.</p>
+
+        <p class="studio-locked" id="studioLocked">Sign up to generate — you get 3 free credits.</p>
 
         <button class="generate-btn" id="genBtn">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 3l14 9-14 9V3z" fill="currentColor"/></svg>
@@ -620,8 +674,8 @@
       </div>
       <div class="feature reveal">
         <div class="fnum">02 — Render</div>
-        <h3>Model does the coverage</h3>
-        <p>Your prompt routes to the video model best suited to it — photoreal, animated, or product-clean — and renders in the background.</p>
+        <h3>Seedance 2.0 does the coverage</h3>
+        <p>Your prompt goes to Seedance 2.0, currently the top-ranked video model for quality and motion, and renders in the background.</p>
       </div>
       <div class="feature reveal">
         <div class="fnum">03 — Export</div>
@@ -657,20 +711,17 @@
     <div class="section-head reveal">
       <span class="tag">Pricing</span>
       <h2>Pay per video, or subscribe and save.</h2>
-      <p>720p = 1 credit · 1080p = 2 credits · 4K = 9 credits. No subscription required to start.</p>
+      <p>Every plan runs on Seedance 2.0 — the strongest AI video model available right now. No subscription required to start.</p>
     </div>
     <div class="pricing-grid">
       <div class="plan reveal">
         <h3>Pay As You Go</h3>
-        <p class="desc">No subscription — one video, on the spot</p>
-        <div class="price">£2<span>/video</span></div>
+        <p class="desc">No subscription — buy credits, use them whenever</p>
+        <div class="price">£10<span>/6 credits</span></div>
         <ul>
-          <li>Credits never expire</li>
-          <li>10-credit pack: £16 (£1.60/credit)</li>
-          <li>720p export (1 credit)</li>
-          <li>1080p export (2 credits)</li>
-          <li>4K export (9 credits)</li>
+          <li>£1.67 per credit</li>
           <li>Standard queue</li>
+          <li>Credits never expire</li>
         </ul>
         <a href="#studio" class="btn btn-ghost">Buy credits</a>
       </div>
@@ -679,9 +730,8 @@
         <p class="desc">For regular posting</p>
         <div class="price">£31.25<span>/mo</span></div>
         <ul>
-          <li>25 credits / month (£1.25/credit)</li>
-          <li>1080p export</li>
-          <li>No watermark</li>
+          <li>25 credits / month</li>
+          <li>£1.25 per credit</li>
           <li>Priority queue</li>
           <li>Unused credits roll over</li>
         </ul>
@@ -692,8 +742,8 @@
         <p class="desc">For agencies and daily use</p>
         <div class="price">£70<span>/mo</span></div>
         <ul>
-          <li>80 credits / month (£0.875/credit)</li>
-          <li>4K upscale export</li>
+          <li>80 credits / month</li>
+          <li>£0.875 per credit</li>
           <li>Priority queue</li>
           <li>API access</li>
           <li>Unused credits roll over</li>
@@ -872,12 +922,20 @@
       signupBtn.style.display = 'none';
       logoutBtn.style.display = 'inline-flex';
       creditsBadge.style.display = 'inline-flex';
+      var hint = document.getElementById('signupHint');
+      if (hint) hint.style.display = 'none';
+      var locked = document.getElementById('studioLocked');
+      if (locked) locked.style.display = 'none';
       loadCredits(session.user.id);
     } else {
       loginBtn.style.display = 'inline-flex';
       signupBtn.style.display = 'inline-flex';
       logoutBtn.style.display = 'none';
       creditsBadge.style.display = 'none';
+      var hint2 = document.getElementById('signupHint');
+      if (hint2) hint2.style.display = 'flex';
+      var locked2 = document.getElementById('studioLocked');
+      if (locked2) locked2.style.display = 'block';
     }
   }
 
@@ -959,6 +1017,43 @@
     setTimeout(() => pollJob(jobId), 1000);
   }
 
+  // ---- Reference image picker ----
+  var refImageData = null; // base64 string when an image is chosen
+  var refImage = document.getElementById('refImage');
+  var imageName = document.getElementById('imageName');
+  var imagePreview = document.getElementById('imagePreview');
+  var imageClear = document.getElementById('imageClear');
+
+  document.getElementById('imagePick').addEventListener('click', function(){
+    refImage.click();
+  });
+
+  refImage.addEventListener('change', function(){
+    var file = refImage.files && refImage.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      imageName.textContent = 'Image too large (max 5MB)';
+      return;
+    }
+    var reader = new FileReader();
+    reader.onload = function(e){
+      refImageData = e.target.result; // data:image/...;base64,...
+      imageName.textContent = file.name;
+      imagePreview.src = refImageData;
+      imagePreview.style.display = 'block';
+      imageClear.style.display = 'inline-block';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  imageClear.addEventListener('click', function(){
+    refImageData = null;
+    refImage.value = '';
+    imageName.textContent = 'No image — text only';
+    imagePreview.style.display = 'none';
+    imageClear.style.display = 'none';
+  });
+
   genBtn.addEventListener('click', async () => {
     const prompt = document.getElementById('prompt').value;
     const style = document.querySelector('#styleGrid .preset.active').dataset.style;
@@ -1008,7 +1103,7 @@
       const res = await fetch(`${BACKEND_URL}/api/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, style, ratio, quality, credits })
+        body: JSON.stringify({ prompt, style, ratio, quality, credits, image: refImageData })
       });
       if (!res.ok) throw new Error('Backend not reachable');
       const { jobId } = await res.json();
