@@ -1296,7 +1296,10 @@
       setTimeout(function(){ pollJob(jobId); }, 2000);
     } catch (err) {
       await refundCredits(window.lastJobCredits || 0);
-      genLabel.textContent = 'Lost contact with the server — credits refunded';
+      var why = (err && err.name ? err.name + ': ' : '') +
+                (err && err.message ? err.message : String(err));
+      console.error('pollJob failed:', err);
+      genLabel.textContent = 'Poll failed — ' + why;
       resetButton();
     }
   }
