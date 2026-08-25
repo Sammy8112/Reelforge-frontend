@@ -434,9 +434,9 @@
       </div>
       <div class="navcta">
         <span class="credits-badge hide-mobile" id="creditsBadge" style="display:none;">🪙 <span id="creditsCount">–</span> credits</span>
-        <a href="#" class="btn btn-ghost" id="loginBtn">Log in</a>
-        <a href="#" class="btn btn-primary" id="signupBtn">Sign up</a>
-        <a href="#" class="btn btn-ghost" id="logoutBtn" style="display:none;">Log out</a>
+        <a href="#" class="btn btn-ghost" id="loginBtn" onclick="openAuth('login'); return false;">Log in</a>
+        <a href="#" class="btn btn-primary" id="signupBtn" onclick="openAuth('signup'); return false;">Sign up</a>
+        <a href="#" class="btn btn-ghost" id="logoutBtn" style="display:none;" onclick="doLogout(); return false;">Log out</a>
         <a href="#studio" class="btn btn-primary">Start generating</a>
       </div>
     </nav>
@@ -701,12 +701,25 @@
   </div>
 </footer>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2" crossorigin="anonymous"></script>
+<script>
+  // If the primary CDN failed, try a backup before giving up.
+  if (!window.supabase) {
+    document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" crossorigin="anonymous"><\/script>');
+  }
+</script>
 <script>
   window.onerror = function(msg, url, line, col, error) {
+    // Ignore opaque cross-origin script errors — we report load status separately below.
+    if (msg === 'Script error.' && line === 0) return false;
     alert('PAGE ERROR: ' + msg + ' (line ' + line + ', col ' + col + ')');
     return false;
   };
+  window.addEventListener('load', function(){
+    if (!window.supabase) {
+      console.warn('Supabase library did not load from any CDN.');
+    }
+  });
 </script>
 <script>
   // ---- Grab DOM elements and wire up modal open/close FIRST ----
@@ -728,29 +741,57 @@
 
   let authMode = 'login'; // or 'signup'
 
-  function openAuth(mode){
-    authMode = mode;
-    authTitle.textContent = mode === 'login' ? 'Log in' : 'Sign up';
-    authSubmit.textContent = mode === 'login' ? 'Log in' : 'Sign up';
-    authToggleText.textContent = mode === 'login' ? "Don't have an account?" : 'Already have an account?';
-    authToggleLink.textContent = mode === 'login' ? 'Sign up' : 'Log in';
-    authError.classList.remove('active');
-    authError.style.color = 'var(--signal)';
-    authEmail.value = '';
-    authPassword.value = '';
-    authOverlay.classList.add('active');
-    if (!supabase) {
-      authError.textContent = 'Login service failed to load — check your connection and reload the page.';
-      authError.classList.add('active');
-    }
-  }
-  function closeAuth(){ authOverlay.classList.remove('active'); }
+  // Attached to window so inline onclick handlers can always reach it,
+  // and it looks up its own elements so it never depends on earlier code.
+  window.openAuth = function(mode){
+    var overlay = document.getElementById('authOverlay');
+    var title = document.getElementById('authTitle');
+    var submit = document.getElementById('authSubmit');
+    var toggleText = document.getElementById('authToggleText');
+    var toggleLink = document.getElementById('authToggleLink');
+    var errEl = document.getElementById('authError');
+    var emailEl = document.getElementById('authEmail');
+    var passEl = document.getElementById('authPassword');
 
-  loginBtn.addEventListener('click', (e) => { e.preventDefault(); alert('DIAGNOSTIC: login clicked, supabase=' + (typeof supabase)); openAuth('login'); });
-  signupBtn.addEventListener('click', (e) => { e.preventDefault(); openAuth('signup'); });
-  document.getElementById('authClose').addEventListener('click', closeAuth);
-  authOverlay.addEventListener('click', (e) => { if (e.target === authOverlay) closeAuth(); });
-  authToggleLink.addEventListener('click', (e) => {
+    if (!overlay) { alert('Login form not found on page.'); return; }
+
+    authMode = mode;
+    title.textContent = mode === 'login' ? 'Log in' : 'Sign up';
+    submit.textContent = mode === 'login' ? 'Log in' : 'Sign up';
+    toggleText.textContent = mode === 'login' ? "Don't have an account?" : 'Already have an account?';
+    toggleLink.textContent = mode === 'login' ? 'Sign up' : 'Log in';
+    errEl.classList.remove('active');
+    errEl.style.color = 'var(--signal)';
+    emailEl.value = '';
+    passEl.value = '';
+    overlay.classList.add('active');
+
+    if (typeof supabase === 'undefined' || !supabase) {
+      errEl.textContent = 'Login service failed to load — check your connection and reload the page.';
+      errEl.classList.add('active');
+    }
+  };
+
+  window.closeAuth = function(){
+    var overlay = document.getElementById('authOverlay');
+    if (overlay) overlay.classList.remove('active');
+  };
+
+  window.doLogout = async function(){
+    if (typeof supabase !== 'undefined' && supabase) {
+      await supabase.auth.signOut();
+    }
+  };
+
+  function openAuth(mode){ return window.openAuth(mode); }
+  function closeAuth(){ return window.closeAuth(); }
+
+  // Nav buttons use inline onclick in the HTML, so they work even if
+  // anything below this point fails. These handle the modal's own controls.
+  var closeEl = document.getElementById('authClose');
+  if (closeEl) closeEl.addEventListener('click', closeAuth);
+  if (authOverlay) authOverlay.addEventListener('click', function(e){ if (e.target === authOverlay) closeAuth(); });
+  if (authToggleLink) authToggleLink.addEventListener('click', function(e){
     e.preventDefault();
     openAuth(authMode === 'login' ? 'signup' : 'login');
   });
@@ -807,10 +848,7 @@
     closeAuth();
   });
 
-  logoutBtn.addEventListener('click', async (e) => {
-    e.preventDefault();
-    await supabase.auth.signOut();
-  });
+  // Logout is wired via inline onclick -> window.doLogout()
 
   // ---- Fetch a user's credit balance from the profiles table ----
   async function loadCredits(userId){
