@@ -773,17 +773,15 @@
   const creditsBadge = document.getElementById('creditsBadge');
   const creditsCount = document.getElementById('creditsCount');
 
-  function openAuth(mode){ return window.openAuth(mode); }
-  function closeAuth(){ return window.closeAuth(); }
 
   // Nav buttons use inline onclick in the HTML, so they work even if
   // anything below this point fails. These handle the modal's own controls.
   var closeEl = document.getElementById('authClose');
-  if (closeEl) closeEl.addEventListener('click', closeAuth);
-  if (authOverlay) authOverlay.addEventListener('click', function(e){ if (e.target === authOverlay) closeAuth(); });
+  if (closeEl) closeEl.addEventListener('click', window.closeAuth);
+  if (authOverlay) authOverlay.addEventListener('click', function(e){ if (e.target === authOverlay) window.closeAuth(); });
   if (authToggleLink) authToggleLink.addEventListener('click', function(e){
     e.preventDefault();
-    openAuth(authMode === 'login' ? 'signup' : 'login');
+    window.openAuth((window.authMode || 'login') === 'login' ? 'signup' : 'login');
   });
 
   // ---- Now safely set up the actual Supabase client ----
@@ -839,7 +837,7 @@
       return;
     }
 
-    closeAuth();
+    window.closeAuth();
   });
 
   // Logout is wired via inline onclick -> window.doLogout()
@@ -879,7 +877,7 @@
     sbClient.auth.getSession().then(({ data }) => refreshAuthUI(data.session));
     sbClient.auth.onAuthStateChange((_event, session) => {
       refreshAuthUI(session);
-      if (session) closeAuth();
+      if (session) window.closeAuth();
     });
   }
 </script>
@@ -959,7 +957,36 @@
     const ratio = document.querySelector('#ratioGrid .preset.active').dataset.ratio;
     const qualityEl = document.querySelector('#qualityGrid .preset.active');
     const quality = qualityEl.dataset.quality;
-    const credits = qualityEl.dataset.credits;
+    const credits = parseInt(qualityEl.dataset.credits, 10);
+
+    // Must be logged in to generate
+    if (!window.supabaseClient) {
+      genLabel.textContent = 'Login service unavailable — reload the page.';
+      return;
+    }
+    var sessionRes = await window.supabaseClient.auth.getSession();
+    if (!sessionRes.data.session) {
+      window.openAuth('login');
+      return;
+    }
+
+    // Spend the credits in the database before rendering anything
+    var spend = await window.supabaseClient.rpc('spend_credits', { amount: credits });
+    if (spend.error) {
+      previewEmpty.style.display = 'none';
+      previewCanvas.classList.add('active');
+      genLabel.textContent = 'Could not check your credits — try again.';
+      return;
+    }
+    if (spend.data === -1) {
+      previewEmpty.style.display = 'none';
+      previewCanvas.classList.add('active');
+      genLabel.textContent = 'Not enough credits — buy more to keep generating.';
+      return;
+    }
+    // Update the badge with the new balance
+    document.getElementById('creditsCount').textContent = spend.data;
+
     resultBadge.textContent = style.toUpperCase() + ' · ' + ratio + ' · ' + quality.toUpperCase();
 
     genBtn.disabled = true;
