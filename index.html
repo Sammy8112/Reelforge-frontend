@@ -1259,7 +1259,11 @@
   // Check the backend every second until the render finishes or fails.
   async function pollJob(jobId){
     try {
-      var res = await fetch(window.BACKEND_URL + '/api/status/' + jobId);
+      // Unique URL + no-store so Safari can't serve a cached (empty) 304.
+      var res = await fetch(
+        window.BACKEND_URL + '/api/status/' + jobId + '?t=' + Date.now(),
+        { cache: 'no-store' }
+      );
       var job = await res.json();
 
       genFill.style.width = (job.progress || 0) + '%';
