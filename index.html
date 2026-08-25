@@ -120,7 +120,7 @@
   .navlinks{ display:flex; gap:32px; font-size:14px; color:var(--ink-dim); }
   .navlinks a:hover{ color:var(--ink); }
   .navcta{
-    display:flex; gap:12px; align-items:center;
+    display:flex; gap:10px; align-items:center; position:relative;
   }
   .btn{
     font-family:var(--body); font-weight:600; font-size:14px;
@@ -133,25 +133,19 @@
   .btn-ghost{ border-color:var(--line); color:var(--ink); }
   .btn-ghost:hover{ border-color:var(--ink-dim); }
   .hide-mobile{ display:inline-flex; }
-  .signup-wrap{ position:relative; display:inline-flex; }
   .signup-hint{
-    position:absolute; top:100%; right:-8px; margin-top:10px;
-    white-space:nowrap; font-family:var(--mono); font-size:11px;
-    color:var(--signal); display:flex; align-items:center; gap:5px;
-    animation:hintbob 2.2s ease-in-out infinite;
+    position:absolute; top:calc(100% + 6px); right:0;
+    white-space:nowrap; font-family:var(--body); font-size:11px;
+    color:var(--signal); letter-spacing:0.01em; opacity:0.9;
   }
-  .signup-arrow{ font-size:14px; display:inline-block; }
-  @keyframes hintbob{
-    0%,100%{ transform:translateY(0); }
-    50%{ transform:translateY(-3px); }
-  }
-  @media(max-width:720px){ .signup-hint{ display:none; } }
+  @media(max-width:900px){ .signup-hint{ display:none; } }
 
   .credits-badge{
-    font-family:var(--mono); font-size:13px; color:var(--ink-dim);
-    background:var(--bg-raised); border:1px solid var(--line);
-    padding:8px 14px; border-radius:8px;
+    font-family:var(--body); font-size:13px; font-weight:500;
+    color:var(--ink-dim); letter-spacing:0.01em;
+    padding:10px 4px; margin-right:6px;
   }
+  .credits-badge #creditsCount{ color:var(--ink); font-weight:600; }
 
   /* ---------- AUTH MODAL ---------- */
   .auth-overlay{
@@ -460,28 +454,43 @@
   .clip-play svg{ width:34px; height:34px; }
 
   /* ---------- PRICING ---------- */
-  .pricing-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
-  @media(max-width:860px){ .pricing-grid{ grid-template-columns:1fr; } }
-  .plan{
-    background:var(--bg-raised); border:1px solid var(--line); border-radius:16px; padding:30px;
-    display:flex; flex-direction:column;
+  .pricing-group{
+    font-family:var(--display); font-size:15px; font-weight:600;
+    letter-spacing:0.01em; margin-bottom:4px; margin-top:52px;
   }
+  .pricing-group:first-of-type{ margin-top:0; }
+  .pricing-group-note{
+    color:var(--ink-faint); font-size:13px; margin-bottom:22px;
+  }
+  .price-sub{
+    font-family:var(--mono); font-size:12px; color:var(--ink-dim);
+    margin-bottom:22px; margin-top:-2px;
+  }
+  .pricing-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:18px; align-items:stretch; }
+  .pricing-grid-two{ grid-template-columns:repeat(2,1fr); max-width:760px; }
+  @media(max-width:860px){ .pricing-grid, .pricing-grid-two{ grid-template-columns:1fr; } }
+  .plan{
+    background:var(--bg-raised); border:1px solid var(--line); border-radius:14px; padding:26px;
+    display:flex; flex-direction:column;
+    transition:border-color .2s ease;
+  }
+  .plan:hover{ border-color:var(--ink-faint); }
   .plan.featured{ border-color:var(--signal); position:relative; }
   .plan.featured::before{
-    content:'MOST USED'; position:absolute; top:-11px; left:28px;
+    content:'MOST POPULAR'; position:absolute; top:-10px; left:24px;
     font-family:var(--mono); font-size:10px; letter-spacing:0.06em;
     background:var(--signal); color:#fff; padding:4px 9px; border-radius:5px;
   }
-  .plan h3{ font-family:var(--display); font-size:18px; font-weight:600; margin-bottom:6px; }
-  .plan .price{ font-family:var(--display); font-size:38px; font-weight:700; margin:14px 0 4px; }
-  .plan .price span{ font-size:14px; color:var(--ink-faint); font-weight:400; font-family:var(--body); }
+  .plan h3{ font-family:var(--display); font-size:16px; font-weight:600; margin-bottom:14px; color:var(--ink-dim); letter-spacing:0.02em; text-transform:uppercase; }
+  .plan .price{ font-family:var(--display); font-size:34px; font-weight:700; margin:0 0 2px; letter-spacing:-0.02em; }
+  .plan .price span{ font-size:15px; color:var(--ink-faint); font-weight:400; font-family:var(--body); letter-spacing:0; }
   .plan .desc{ color:var(--ink-dim); font-size:13px; margin-bottom:22px; }
   .plan ul{ list-style:none; margin-bottom:26px; flex:1; }
   .plan li{
-    font-size:13px; color:var(--ink-dim); padding:9px 0; border-top:1px solid var(--line);
+    font-size:13px; color:var(--ink-dim); padding:8px 0; border-top:1px solid var(--line);
     display:flex; gap:9px;
   }
-  .plan li::before{ content:'—'; color:var(--ink-faint); }
+  .plan li::before{ content:'·'; color:var(--ink-faint); }
 
   /* ---------- FOOTER ---------- */
   footer{ border-top:1px solid var(--line); padding:50px 0 34px; }
@@ -513,9 +522,9 @@
         <a href="#pricing">Pricing</a>
       </div>
       <div class="navcta">
-        <span class="credits-badge hide-mobile" id="creditsBadge" style="display:none;">🪙 <span id="creditsCount">–</span> credits</span>
+        <span class="credits-badge" id="creditsBadge" style="display:none;"><span id="creditsCount">–</span> credits</span>
         <a href="#" class="btn btn-ghost" id="loginBtn" onclick="document.getElementById('authOverlay').classList.add('active');document.getElementById('authTitle').textContent='Log in';document.getElementById('authSubmit').textContent='Log in';window.authMode='login';return false;">Log in</a>
-        <span class="signup-wrap"><span class="signup-hint" id="signupHint">3 free credits <span class="signup-arrow">&#8599;</span></span></span><a href="#" class="btn btn-primary" id="signupBtn" onclick="document.getElementById('authOverlay').classList.add('active');document.getElementById('authTitle').textContent='Sign up';document.getElementById('authSubmit').textContent='Sign up';window.authMode='signup';return false;">Sign up</a>
+        <span class="signup-hint" id="signupHint">&#8599; 3 free credits</span><a href="#" class="btn btn-primary" id="signupBtn" onclick="document.getElementById('authOverlay').classList.add('active');document.getElementById('authTitle').textContent='Sign up';document.getElementById('authSubmit').textContent='Sign up';window.authMode='signup';return false;">Sign up</a>
         <a href="#" class="btn btn-ghost" id="logoutBtn" style="display:none;" onclick="if(window.supabaseClient){window.supabaseClient.auth.signOut();}return false;">Log out</a>
         <a href="#studio" class="btn btn-primary">Start generating</a>
       </div>
@@ -545,7 +554,7 @@
     <div>
       <div class="eyebrow">Text / image → video</div>
       <h1>Describe the shot.<br>Skip the <em>shoot</em>.</h1>
-      <p class="lead">Type a scene, pick a look, get a clip. REELFORGE runs on Seedance 2.0 — the strongest AI video model available right now — turning a single line of description into finished video. No camera, no cast, no editing timeline.</p>
+      <p class="lead">Type a scene, get a clip. REELFORGE runs on Seedance 2.0 — the strongest AI video model available right now — with Seedance 2.5 for longer clips up to 30 seconds. No camera, no cast, no editing timeline.</p>
       <div class="hero-actions">
         <a href="#studio" class="btn btn-primary btn-lg">Try the studio — free</a>
         <a href="#gallery" class="btn btn-ghost btn-lg">See what it makes</a>
@@ -710,27 +719,52 @@
     <div class="section-head reveal">
       <span class="tag">Pricing</span>
       <h2>Pay per video, or subscribe and save.</h2>
-      <p>Every plan runs on Seedance 2.0 — the strongest AI video model available right now. No subscription required to start.</p>
+      <p>Credits work across both models. Buy a pack whenever you need one, or subscribe for a lower rate per credit.</p>
     </div>
+
+    <h3 class="pricing-group">Credit packs</h3>
+    <p class="pricing-group-note">One-off purchase. No subscription, and credits never expire.</p>
     <div class="pricing-grid">
       <div class="plan reveal">
-        <h3>Pay As You Go</h3>
-        <p class="desc">No subscription — buy credits, use them whenever</p>
-        <div class="price">£10<span>/6 credits</span></div>
+        <h3>Starter</h3>
+        <div class="price">£10</div>
+        <p class="price-sub">6 credits · £1.67 each</p>
         <ul>
-          <li>£1.67 per credit</li>
           <li>Standard queue</li>
           <li>Credits never expire</li>
         </ul>
-        <a href="#" class="btn btn-ghost" data-pack="payg">Buy credits</a>
+        <a href="#" class="btn btn-ghost" data-pack="payg10">Buy 6 credits</a>
       </div>
+      <div class="plan reveal">
+        <h3>Plus</h3>
+        <div class="price">£20</div>
+        <p class="price-sub">13 credits · £1.54 each</p>
+        <ul>
+          <li>Standard queue</li>
+          <li>Credits never expire</li>
+        </ul>
+        <a href="#" class="btn btn-ghost" data-pack="payg20">Buy 13 credits</a>
+      </div>
+      <div class="plan reveal">
+        <h3>Pro</h3>
+        <div class="price">£30</div>
+        <p class="price-sub">20 credits · £1.50 each</p>
+        <ul>
+          <li>Standard queue</li>
+          <li>Credits never expire</li>
+        </ul>
+        <a href="#" class="btn btn-ghost" data-pack="payg30">Buy 20 credits</a>
+      </div>
+    </div>
+
+    <h3 class="pricing-group">Monthly plans</h3>
+    <p class="pricing-group-note">Lower rate per credit. Cancel any time.</p>
+    <div class="pricing-grid pricing-grid-two">
       <div class="plan featured reveal">
         <h3>Creator</h3>
-        <p class="desc">For regular posting</p>
         <div class="price">£31.25<span>/mo</span></div>
+        <p class="price-sub">25 credits · £1.25 each</p>
         <ul>
-          <li>25 credits / month</li>
-          <li>£1.25 per credit</li>
           <li>Priority queue</li>
           <li>Unused credits roll over</li>
         </ul>
@@ -738,11 +772,9 @@
       </div>
       <div class="plan reveal">
         <h3>Studio</h3>
-        <p class="desc">For agencies and daily use</p>
-        <div class="price">£70<span>/mo</span></div>
+        <div class="price">£80<span>/mo</span></div>
+        <p class="price-sub">80 credits · £1.00 each</p>
         <ul>
-          <li>80 credits / month</li>
-          <li>£0.875 per credit</li>
           <li>Priority queue</li>
           <li>API access</li>
           <li>Unused credits roll over</li>
