@@ -186,6 +186,34 @@
   @media(max-width:720px){
     .navlinks{ display:none; }
     .hide-mobile{ display:none; }
+    .wrap{ padding:0 20px; }
+
+    /* nav: compact, single tidy row */
+    nav{ padding:14px 0; gap:10px; }
+    .logo{ font-size:17px; gap:7px; }
+    .navcta{ gap:8px; }
+    .btn{ padding:9px 13px; font-size:13px; }
+    .credits-badge{ font-size:12px; padding:8px 2px; margin-right:2px; }
+
+    /* hero: tighter, buttons side by side */
+    .hero{ padding:56px 0 40px; }
+    .hero p.lead{ font-size:16px; margin-bottom:28px; }
+    .hero-actions{ gap:10px; }
+    .btn-lg{ padding:13px 18px; font-size:14px; flex:1; justify-content:center; }
+    .timecode-row{
+      gap:8px; margin-top:28px; flex-direction:column;
+      font-size:11px; line-height:1.5;
+    }
+
+    /* sections: less vertical dead space */
+    .section{ padding:64px 0; }
+    .usecases{ padding-top:56px; padding-bottom:8px; }
+    .section-head{ margin-bottom:30px; }
+    .section-head p{ font-size:15px; }
+
+    .plan, .usecase, .feature{ padding:22px; }
+    .pricing-group{ margin-top:38px; }
+    .studio{ padding:22px; gap:24px; }
   }
 
   /* ---------- HERO ---------- */
@@ -622,7 +650,6 @@
     <div class="section-head reveal">
       <span class="tag">What people make</span>
       <h2>One tool, whatever you're making.</h2>
-      <p>The same studio handles a polished client ad and a daft two-minute story. You decide how serious it needs to be.</p>
     </div>
     <div class="usecase-grid">
       <div class="usecase reveal">
