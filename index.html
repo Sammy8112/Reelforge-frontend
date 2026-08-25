@@ -133,10 +133,12 @@
   .btn-ghost{ border-color:var(--line); color:var(--ink); }
   .btn-ghost:hover{ border-color:var(--ink-dim); }
   .hide-mobile{ display:inline-flex; }
+  .signup-wrap{ position:relative; display:inline-flex; }
   .signup-hint{
-    position:absolute; top:calc(100% + 6px); right:0;
+    position:absolute; top:calc(100% + 7px); left:50%;
+    transform:translateX(-50%);
     white-space:nowrap; font-family:var(--body); font-size:11px;
-    color:var(--signal); letter-spacing:0.01em; opacity:0.9;
+    color:var(--signal); letter-spacing:0.01em;
   }
   @media(max-width:900px){ .signup-hint{ display:none; } }
 
@@ -302,6 +304,23 @@
     font-weight:600; letter-spacing:-0.01em; line-height:1.1; margin-bottom:14px;
   }
   .section-head p{ color:var(--ink-dim); font-size:16px; line-height:1.6; }
+
+  /* ---------- USE CASES ---------- */
+  .usecases{ padding-top:80px; padding-bottom:20px; }
+  .usecase-grid{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:18px;
+  }
+  @media(max-width:860px){ .usecase-grid{ grid-template-columns:1fr; } }
+  .usecase{
+    background:var(--bg-raised); border:1px solid var(--line);
+    border-radius:14px; padding:26px;
+    transition:border-color .2s ease;
+  }
+  .usecase:hover{ border-color:var(--ink-faint); }
+  .usecase h3{
+    font-family:var(--display); font-size:17px; font-weight:600; margin-bottom:10px;
+  }
+  .usecase p{ color:var(--ink-dim); font-size:14px; line-height:1.65; }
 
   /* ---------- GENERATOR DEMO ---------- */
   .studio{
@@ -524,7 +543,7 @@
       <div class="navcta">
         <span class="credits-badge" id="creditsBadge" style="display:none;"><span id="creditsCount">–</span> credits</span>
         <a href="#" class="btn btn-ghost" id="loginBtn" onclick="document.getElementById('authOverlay').classList.add('active');document.getElementById('authTitle').textContent='Log in';document.getElementById('authSubmit').textContent='Log in';window.authMode='login';return false;">Log in</a>
-        <span class="signup-hint" id="signupHint">&#8599; 3 free credits</span><a href="#" class="btn btn-primary" id="signupBtn" onclick="document.getElementById('authOverlay').classList.add('active');document.getElementById('authTitle').textContent='Sign up';document.getElementById('authSubmit').textContent='Sign up';window.authMode='signup';return false;">Sign up</a>
+        <span class="signup-wrap"><span class="signup-hint" id="signupHint">&#8593; 3 free credits</span><a href="#" class="btn btn-primary" id="signupBtn" onclick="document.getElementById('authOverlay').classList.add('active');document.getElementById('authTitle').textContent='Sign up';document.getElementById('authSubmit').textContent='Sign up';window.authMode='signup';return false;">Sign up</a></span>
         <a href="#" class="btn btn-ghost" id="logoutBtn" style="display:none;" onclick="if(window.supabaseClient){window.supabaseClient.auth.signOut();}return false;">Log out</a>
         <a href="#studio" class="btn btn-primary">Start generating</a>
       </div>
@@ -597,6 +616,30 @@
     </div>
   </div>
 </div>
+
+<section class="section usecases" id="usecases">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="tag">What people make</span>
+      <h2>One tool, whatever you're making.</h2>
+      <p>The same studio handles a polished client ad and a daft two-minute story. You decide how serious it needs to be.</p>
+    </div>
+    <div class="usecase-grid">
+      <div class="usecase reveal">
+        <h3>Professional ads</h3>
+        <p>Product spots, brand films and campaign cutdowns at up to 4K — sharp enough for paid media and client work.</p>
+      </div>
+      <div class="usecase reveal">
+        <h3>Everyday content</h3>
+        <p>Reels, TikToks and stories on a schedule. Quick drafts at 720p, or 1080p when it's going out to an audience.</p>
+      </div>
+      <div class="usecase reveal">
+        <h3>Stories and skits</h3>
+        <p>Funny shorts, animated scenes, whatever's in your head. Chain longer clips with Seedance 2.5 for full sequences.</p>
+      </div>
+    </div>
+  </div>
+</section>
 
 <section class="section" id="studio">
   <div class="wrap">
