@@ -1209,7 +1209,8 @@
   selectModel('seedance-2.0');
 
   // ---- Reference image picker ----
-  var refImageData = null; // base64 string when an image is chosen
+  var refImageFile = null; // the chosen File, uploaded at generate time
+  var refImageData = null; // local preview only
   var refImage = document.getElementById('refImage');
   var imageName = document.getElementById('imageName');
   var imagePreview = document.getElementById('imagePreview');
@@ -1226,9 +1227,10 @@
       imageName.textContent = 'Image too large (max 5MB)';
       return;
     }
+    refImageFile = file;
     var reader = new FileReader();
     reader.onload = function(e){
-      refImageData = e.target.result; // data:image/...;base64,...
+      refImageData = e.target.result; // preview only
       imageName.textContent = file.name;
       imagePreview.src = refImageData;
       imagePreview.style.display = 'block';
@@ -1238,12 +1240,32 @@
   });
 
   imageClear.addEventListener('click', function(){
+    refImageFile = null;
     refImageData = null;
     refImage.value = '';
     imageName.textContent = 'No image — text only';
     imagePreview.style.display = 'none';
     imageClear.style.display = 'none';
   });
+
+  // Segmind fetches reference images over HTTPS, so the file has to be
+  // hosted somewhere public first. Supabase Storage handles that.
+  async function uploadReferenceImage(file, userId){
+    var ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    var path = userId + '/' + Date.now() + '.' + ext;
+
+    var up = await window.supabaseClient
+      .storage.from('reference-images')
+      .upload(path, file, { upsert: true, contentType: file.type });
+
+    if (up.error) throw new Error('Image upload failed: ' + up.error.message);
+
+    var pub = window.supabaseClient
+      .storage.from('reference-images')
+      .getPublicUrl(path);
+
+    return pub.data.publicUrl;
+  }
 
   // Re-enable the generate button and restore its credit label.
   function resetButton(){
@@ -1361,10 +1383,16 @@
     genLabel.textContent = 'Queued…';
 
     try {
+      var imageUrl = null;
+      if (refImageFile) {
+        genLabel.textContent = 'Uploading image…';
+        imageUrl = await uploadReferenceImage(refImageFile, sessionRes.data.session.user.id);
+      }
+
       const res = await fetch(`${window.BACKEND_URL}/api/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, ratio, model, quality, duration, credits, image: refImageData })
+        body: JSON.stringify({ prompt, ratio, model, quality, duration, credits, image: imageUrl })
       });
       if (!res.ok) throw new Error('Backend not reachable');
       const { jobId } = await res.json();
