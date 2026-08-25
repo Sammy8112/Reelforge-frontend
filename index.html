@@ -1280,10 +1280,19 @@
         return;
       }
 
+      // Job vanished — usually means the backend restarted mid-render.
+      if (job.error === 'Job not found') {
+        await refundCredits(window.lastJobCredits || 0);
+        genLabel.textContent = 'Render lost (server restarted) — credits refunded';
+        resetButton();
+        return;
+      }
+
       genLabel.textContent = 'Rendering… ' + (job.progress || 0) + '%';
       setTimeout(function(){ pollJob(jobId); }, 2000);
     } catch (err) {
-      genLabel.textContent = 'Lost contact with the server while rendering.';
+      await refundCredits(window.lastJobCredits || 0);
+      genLabel.textContent = 'Lost contact with the server — credits refunded';
       resetButton();
     }
   }
