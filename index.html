@@ -514,7 +514,6 @@
     background:linear-gradient(160deg,#232326,#17171a);
     border:1px solid var(--line);
   }
-  .clip::after{ content:''; position:absolute; inset:0; }
   .clip:nth-child(1)::after{ background:linear-gradient(140deg, rgba(255,59,48,0.28), transparent 60%); }
   .clip:nth-child(2)::after{ background:linear-gradient(140deg, rgba(124,92,252,0.26), transparent 60%); }
   .clip:nth-child(3)::after{ background:linear-gradient(140deg, rgba(0,229,199,0.22), transparent 60%); }
@@ -821,18 +820,9 @@
     <div class="section-head reveal">
       <span class="tag">Made on REELFORGE</span>
       <h2>A few recent renders.</h2>
-      <p>Placeholder frames for now — swap this row for real output once a video model is connected.</p>
+      <p>Every clip below was generated on this site.</p>
     </div>
-    <div class="gallery">
-      <div class="clip"><span class="clip-tag">00:07</span><span class="clip-play">▶</span></div>
-      <div class="clip"><span class="clip-tag">00:05</span><span class="clip-play">▶</span></div>
-      <div class="clip"><span class="clip-tag">00:09</span><span class="clip-play">▶</span></div>
-      <div class="clip"><span class="clip-tag">00:06</span><span class="clip-play">▶</span></div>
-      <div class="clip"><span class="clip-tag">00:08</span><span class="clip-play">▶</span></div>
-      <div class="clip"><span class="clip-tag">00:04</span><span class="clip-play">▶</span></div>
-      <div class="clip"><span class="clip-tag">00:10</span><span class="clip-play">▶</span></div>
-      <div class="clip"><span class="clip-tag">00:07</span><span class="clip-play">▶</span></div>
-    </div>
+    <div class="gallery" id="galleryGrid"></div>
   </div>
 </section>
 
@@ -1497,6 +1487,33 @@
       if (s.data.session) loadCredits(s.data.session.user.id);
     }, 2500);
   }
+
+  // ---- Gallery ----
+  // Paste the public URL of each showcase video here. Leave the list empty
+  // and the whole gallery section hides itself.
+  var GALLERY_VIDEOS = [
+    // 'https://pfadvhajdeawxemqxmsj.supabase.co/storage/v1/object/public/gallery/clip1.mp4',
+  ];
+
+  (function renderGallery(){
+    var grid = document.getElementById('galleryGrid');
+    var section = document.getElementById('gallery');
+    if (!grid) return;
+
+    if (!GALLERY_VIDEOS.length) {
+      if (section) section.style.display = 'none';
+      return;
+    }
+
+    GALLERY_VIDEOS.forEach(function(url){
+      var wrap = document.createElement('div');
+      wrap.className = 'clip';
+      wrap.innerHTML =
+        '<video src="' + url + '" muted loop playsinline autoplay preload="metadata" ' +
+        'style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;"></video>';
+      grid.appendChild(wrap);
+    });
+  })();
 
   // scroll reveal
   const io = new IntersectionObserver((entries)=>{
