@@ -1028,7 +1028,15 @@
     var mode = window.authMode || 'login';
     const { data, error } = mode === 'login'
       ? await sbClient.auth.signInWithPassword({ email, password })
-      : await sbClient.auth.signUp({ email, password });
+      : await sbClient.auth.signUp({
+          email: email,
+          password: password,
+          options: {
+            // Send people back to this exact page after confirming,
+            // rather than relying on the dashboard's Site URL setting.
+            emailRedirectTo: window.location.origin + window.location.pathname
+          }
+        });
 
     authSubmit.disabled = false;
     authSubmit.textContent = mode === 'login' ? 'Log in' : 'Sign up';
