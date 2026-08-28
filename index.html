@@ -675,6 +675,7 @@
         <a href="#pricing">Pricing</a>
       </div>
       <div class="navcta">
+        <a href="profile.html" class="btn btn-ghost" id="profileBtn" style="display:none;">Your videos</a>
         <span class="credits-badge" id="creditsBadge" style="display:none;"><span id="creditsCount">–</span> credits</span>
         <a href="#" class="btn btn-ghost" id="loginBtn" onclick="document.getElementById('authOverlay').classList.add('active');document.getElementById('authTitle').textContent='Log in';document.getElementById('authSubmit').textContent='Log in';window.authMode='login';return false;">Log in</a>
         <span class="signup-wrap"><span class="signup-hint" id="signupHint"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V6"/><path d="M6 11l6-6 6 6"/></svg>100 free credits</span><a href="#" class="btn btn-primary" id="signupBtn" onclick="document.getElementById('authOverlay').classList.add('active');document.getElementById('authTitle').textContent='Sign up';document.getElementById('authSubmit').textContent='Sign up';window.authMode='signup';return false;">Sign up</a></span>
@@ -1170,6 +1171,8 @@
       signupBtn.style.display = 'none';
       logoutBtn.style.display = 'inline-flex';
       creditsBadge.style.display = 'inline-flex';
+      var pb = document.getElementById('profileBtn');
+      if (pb) pb.style.display = 'inline-flex';
       var hint = document.getElementById('signupHint');
       if (hint) hint.style.display = 'none';
       var locked = document.getElementById('studioLocked');
@@ -1180,6 +1183,8 @@
       signupBtn.style.display = 'inline-flex';
       logoutBtn.style.display = 'none';
       creditsBadge.style.display = 'none';
+      var pb2 = document.getElementById('profileBtn');
+      if (pb2) pb2.style.display = 'none';
       var hint2 = document.getElementById('signupHint');
       if (hint2) hint2.style.display = 'flex';
       var locked2 = document.getElementById('studioLocked');
