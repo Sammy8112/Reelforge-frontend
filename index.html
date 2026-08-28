@@ -512,6 +512,44 @@
     background:rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.12); color:var(--ink-dim);
   }
 
+  /* ---------- LENGTH SLIDER ---------- */
+  .length-wrap{ padding:2px 0 0; }
+  .length-readout{
+    display:flex; align-items:baseline; justify-content:space-between;
+    margin-bottom:12px;
+  }
+  .length-readout #lengthValue{
+    font-family:var(--display); font-size:26px; font-weight:600; color:var(--ink);
+    letter-spacing:0.01em;
+  }
+  .length-readout #lengthCost{
+    font-family:var(--mono); font-size:12px; color:var(--ink-dim);
+  }
+  #lengthSlider{
+    -webkit-appearance:none; appearance:none;
+    width:100%; height:6px; border-radius:3px;
+    background:var(--bg-raised); border:1px solid var(--line);
+    outline:none; cursor:pointer; margin:0;
+  }
+  #lengthSlider::-webkit-slider-thumb{
+    -webkit-appearance:none; appearance:none;
+    width:24px; height:24px; border-radius:50%;
+    background:var(--signal); border:3px solid var(--bg);
+    box-shadow:0 2px 8px rgba(0,0,0,0.5);
+    cursor:grab;
+  }
+  #lengthSlider::-webkit-slider-thumb:active{ cursor:grabbing; }
+  #lengthSlider::-moz-range-thumb{
+    width:24px; height:24px; border-radius:50%;
+    background:var(--signal); border:3px solid var(--bg);
+    box-shadow:0 2px 8px rgba(0,0,0,0.5);
+    cursor:grab;
+  }
+  .length-scale{
+    display:flex; justify-content:space-between; margin-top:8px;
+    font-family:var(--mono); font-size:11px; color:var(--ink-faint);
+  }
+
   .new-badge{
     display:inline-block; font-family:var(--mono); font-size:9px; font-weight:700;
     letter-spacing:0.04em; padding:2px 5px; margin-left:6px; border-radius:4px;
@@ -639,7 +677,7 @@
       <div class="navcta">
         <span class="credits-badge" id="creditsBadge" style="display:none;"><span id="creditsCount">–</span> credits</span>
         <a href="#" class="btn btn-ghost" id="loginBtn" onclick="document.getElementById('authOverlay').classList.add('active');document.getElementById('authTitle').textContent='Log in';document.getElementById('authSubmit').textContent='Log in';window.authMode='login';return false;">Log in</a>
-        <span class="signup-wrap"><span class="signup-hint" id="signupHint"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V6"/><path d="M6 11l6-6 6 6"/></svg>1 free credit</span><a href="#" class="btn btn-primary" id="signupBtn" onclick="document.getElementById('authOverlay').classList.add('active');document.getElementById('authTitle').textContent='Sign up';document.getElementById('authSubmit').textContent='Sign up';window.authMode='signup';return false;">Sign up</a></span>
+        <span class="signup-wrap"><span class="signup-hint" id="signupHint"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V6"/><path d="M6 11l6-6 6 6"/></svg>100 free credits</span><a href="#" class="btn btn-primary" id="signupBtn" onclick="document.getElementById('authOverlay').classList.add('active');document.getElementById('authTitle').textContent='Sign up';document.getElementById('authSubmit').textContent='Sign up';window.authMode='signup';return false;">Sign up</a></span>
         <a href="#" class="btn btn-ghost" id="logoutBtn" style="display:none;" onclick="if(window.supabaseClient){window.supabaseClient.auth.signOut();}return false;">Log out</a>
         <a href="#studio" class="btn btn-primary">Start generating</a>
       </div>
@@ -761,7 +799,7 @@
         <label>Model</label>
         <div class="ratio-row" id="modelGrid">
           <div class="preset active" data-model="seedance-2.0" data-desc="Best quality and the cheapest per second. Up to 4K, clips up to 15 seconds.">Seedance 2.0</div>
-          <div class="preset" data-model="seedance-2.5" data-desc="Clips up to 30 seconds, but 720p max and more per second — use it when you need the length.">Seedance 2.5</div>
+          <div class="preset" data-model="seedance-2.5" data-desc="Clips up to 30 seconds. Costs more per second than 2.0 — use it when you need the length.">Seedance 2.5</div>
         </div>
         <p class="quality-desc" id="modelDesc">Best quality — up to 4K, clips up to 15 seconds.</p>
 
@@ -776,14 +814,25 @@
         <div class="ratio-row" id="qualityGrid"></div>
 
         <label>Length</label>
-        <div class="ratio-row" id="durationGrid"></div>
+        <div class="length-wrap">
+          <div class="length-readout">
+            <span id="lengthValue">5s</span>
+            <span id="lengthCost">100 credits</span>
+          </div>
+          <input type="range" id="lengthSlider" min="4" max="15" step="1" value="5"
+                 aria-label="Clip length in seconds">
+          <div class="length-scale">
+            <span id="lengthMin">4s</span>
+            <span id="lengthMax">15s</span>
+          </div>
+        </div>
         <p class="quality-desc" id="qualityDesc"></p>
 
-        <p class="studio-locked" id="studioLocked">Sign up to generate — you get <b>1 free credit</b>.</p>
+        <p class="studio-locked" id="studioLocked">Sign up to generate — you get <b>100 free credits</b>.</p>
 
         <button class="generate-btn" id="genBtn">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 3l14 9-14 9V3z" fill="currentColor"/></svg>
-          <span id="genBtnLabel">Generate video — 1 credit</span>
+          <span id="genBtnLabel">Generate video — 100 credits</span>
         </button>
       </div>
 
@@ -874,32 +923,32 @@
       <div class="plan reveal">
         <h3>Starter</h3>
         <div class="price">£10</div>
-        <p class="price-sub">6 credits · £1.67 each</p>
+        <p class="price-sub">600 credits · about 6 short clips</p>
         <ul>
           <li>Standard queue</li>
           <li>Credits never expire</li>
         </ul>
-        <a href="#" class="btn btn-ghost" data-pack="payg10">Buy 6 credits</a>
+        <a href="#" class="btn btn-ghost" data-pack="payg10">Buy 600 credits</a>
       </div>
       <div class="plan reveal">
         <h3>Plus</h3>
         <div class="price">£20</div>
-        <p class="price-sub">13 credits · £1.54 each</p>
+        <p class="price-sub">1,300 credits · about 13 short clips</p>
         <ul>
           <li>Standard queue</li>
           <li>Credits never expire</li>
         </ul>
-        <a href="#" class="btn btn-ghost" data-pack="payg20">Buy 13 credits</a>
+        <a href="#" class="btn btn-ghost" data-pack="payg20">Buy 1,300 credits</a>
       </div>
       <div class="plan reveal">
         <h3>Pro</h3>
         <div class="price">£30</div>
-        <p class="price-sub">20 credits · £1.50 each</p>
+        <p class="price-sub">2,000 credits · about 20 short clips</p>
         <ul>
           <li>Standard queue</li>
           <li>Credits never expire</li>
         </ul>
-        <a href="#" class="btn btn-ghost" data-pack="payg30">Buy 20 credits</a>
+        <a href="#" class="btn btn-ghost" data-pack="payg30">Buy 2,000 credits</a>
       </div>
     </div>
 
@@ -909,7 +958,7 @@
       <div class="plan featured reveal">
         <h3>Creator</h3>
         <div class="price">£31.25<span>/mo</span></div>
-        <p class="price-sub">25 credits · £1.25 each</p>
+        <p class="price-sub">2,500 credits/mo · about 25 short clips</p>
         <ul>
           <li>Priority queue</li>
           <li>Unused credits roll over</li>
@@ -919,7 +968,7 @@
       <div class="plan value-tag reveal">
         <h3>Studio</h3>
         <div class="price">£80<span>/mo</span></div>
-        <p class="price-sub">80 credits · £1.00 each</p>
+        <p class="price-sub">8,000 credits/mo · about 80 short clips</p>
         <ul>
           <li>Priority queue</li>
           <li>API access</li>
@@ -1160,36 +1209,37 @@
   wireGroup('ratioGrid');
 
   // ---- Credit costs ----
-  // 1 credit is priced against the cost of a 5s 720p Seedance 2.0 render.
-  // Costs scale with length and resolution, so each combination has its own price.
+  // Credits are charged per second of output. Rates are derived from Segmind's
+  // published per-second API rates plus margin — see slider_pricing.md.
+  // 100 credits ~= the cost of a 5s 720p Seedance 2.0 render.
   var MODELS = {
     'seedance-2.0': {
       label: 'Seedance 2.0',
       desc: 'Best quality and the cheapest per second. Up to 4K, clips up to 15 seconds.',
       resolutions: [
-        { id: '720p',  label: '720p',  desc: 'Casual posts and quick drafts.' },
-        { id: '1080p', label: '1080p', desc: 'Everyday content — feeds, stories, reels.' },
-        { id: '4k',    label: '4K',    desc: 'Ad campaigns, big screens, client work.', isNew: true }
+        { id: '480p',  label: '480p',  desc: 'Drafts and quick tests — lowest cost per second.' },
+        { id: '720p',  label: '720p',  desc: 'Everyday content — feeds, stories, reels.' },
+        { id: '1080p', label: '1080p', desc: 'Sharper delivery for client work and websites.' },
+        { id: '4k',    label: '4K',    desc: 'Ad campaigns, big screens, hero shots.', isNew: true }
       ],
-      durations: [5, 10, 15],
-      credits: {
-        '720p':  { 5: 1,  10: 2,  15: 3  },
-        '1080p': { 5: 2,  10: 4,  15: 7  },
-        '4k':    { 5: 9,  10: 18, 15: 27 }
-      }
+      minDuration: 4,
+      maxDuration: 15,
+      defaultDuration: 5,
+      // credits per second of output
+      rates: { '480p': 10, '720p': 20, '1080p': 45, '4k': 180 }
     },
     'seedance-2.5': {
       label: 'Seedance 2.5',
-      desc: 'Clips up to 30 seconds, but 720p max and more per second — use it when you need the length.',
+      desc: 'Clips up to 30 seconds. Costs more per second than 2.0 — use it when you need the length.',
       resolutions: [
-        { id: '480p', label: '480p', desc: 'Longest clips, lowest cost. Good for story sequences.' },
-        { id: '720p', label: '720p', desc: 'Sharper long-form clips, costs more per second.' }
+        { id: '480p',  label: '480p',  desc: 'Longest clips, lowest cost. Good for story sequences.' },
+        { id: '720p',  label: '720p',  desc: 'Sharper long-form clips, costs more per second.' },
+        { id: '1080p', label: '1080p', desc: 'Full HD long-form. The most expensive option here.', isNew: true }
       ],
-      durations: [10, 20, 30],
-      credits: {
-        '480p': { 10: 2, 20: 3, 30: 5  },
-        '720p': { 10: 4, 20: 7, 30: 10 }
-      }
+      minDuration: 4,
+      maxDuration: 30,
+      defaultDuration: 10,
+      rates: { '480p': 17, '720p': 35, '1080p': 85 }
     }
   };
 
@@ -1204,29 +1254,40 @@
   var genBtnLabel = document.getElementById('genBtnLabel');
 
   function creditsFor(model, res, dur){
-    var table = MODELS[model].credits[res];
-    return table ? table[dur] : 1;
+    var m = MODELS[model];
+    if (!m) return 0;
+    var rate = m.rates[res];
+    if (!rate) return 0;
+    return Math.ceil(rate * dur);
+  }
+
+  function fmtCredits(n){
+    return n.toLocaleString() + ' credit' + (n === 1 ? '' : 's');
   }
 
   function updateGenLabel(){
     var n = creditsFor(currentModel, currentRes, currentDuration);
-    genBtnLabel.textContent = 'Generate video — ' + n + ' credit' + (n > 1 ? 's' : '');
+    genBtnLabel.textContent = 'Generate video — ' + fmtCredits(n);
   }
 
+  // Length is a slider now. Bounds depend on the model (2.0 is 4-15s, 2.5 is 4-30s),
+  // so they're reset whenever the model changes.
   function renderDurations(){
     var m = MODELS[currentModel];
-    durationGrid.innerHTML = '';
-    m.durations.forEach(function(d){
-      var el = document.createElement('div');
-      el.className = 'preset' + (d === currentDuration ? ' active' : '');
-      el.textContent = d + 's · ' + creditsFor(currentModel, currentRes, d) + 'cr';
-      el.addEventListener('click', function(){
-        currentDuration = d;
-        renderDurations();
-        updateGenLabel();
-      });
-      durationGrid.appendChild(el);
-    });
+    var slider = document.getElementById('lengthSlider');
+    if (!slider) return;
+
+    slider.min = m.minDuration;
+    slider.max = m.maxDuration;
+    if (currentDuration < m.minDuration) currentDuration = m.minDuration;
+    if (currentDuration > m.maxDuration) currentDuration = m.maxDuration;
+    slider.value = currentDuration;
+
+    document.getElementById('lengthValue').textContent = currentDuration + 's';
+    document.getElementById('lengthCost').textContent =
+      fmtCredits(creditsFor(currentModel, currentRes, currentDuration));
+    document.getElementById('lengthMin').textContent = m.minDuration + 's';
+    document.getElementById('lengthMax').textContent = m.maxDuration + 's';
   }
 
   function renderResolutions(){
@@ -1253,12 +1314,24 @@
     currentModel = id;
     var m = MODELS[id];
     currentRes = m.resolutions[0].id;
-    currentDuration = m.durations[0];
+    currentDuration = m.defaultDuration;
     modelDesc.textContent = m.desc;
     renderResolutions();
     renderDurations();
     updateGenLabel();
   }
+
+  (function wireLengthSlider(){
+    var slider = document.getElementById('lengthSlider');
+    if (!slider) return;
+    slider.addEventListener('input', function(){
+      currentDuration = parseInt(slider.value, 10);
+      document.getElementById('lengthValue').textContent = currentDuration + 's';
+      document.getElementById('lengthCost').textContent =
+        fmtCredits(creditsFor(currentModel, currentRes, currentDuration));
+      updateGenLabel();
+    });
+  })();
 
   document.querySelectorAll('#modelGrid .preset').forEach(function(el){
     el.addEventListener('click', function(){
@@ -1365,13 +1438,19 @@
     updateGenLabel();
   }
 
-  // Give credits back when a render fails, so nobody pays for nothing.
-  async function refundCredits(amount){
-    if (!amount || !window.supabaseClient) return;
+  // Refunds are handled by the backend, which knows what was actually charged.
+  // Refunding from the browser would let anyone mint credits by faking a failure.
+  // Re-reads the balance from the database instead.
+  async function refreshBalance(){
+    if (!window.supabaseClient) return;
     try {
-      var r = await window.supabaseClient.rpc('spend_credits', { amount: -amount });
-      if (!r.error && typeof r.data === 'number' && r.data >= 0) {
-        document.getElementById('creditsCount').textContent = r.data;
+      var s = await window.supabaseClient.auth.getSession();
+      if (!s.data.session) return;
+      var r = await window.supabaseClient
+        .from('profiles').select('credits')
+        .eq('id', s.data.session.user.id).single();
+      if (!r.error && r.data) {
+        document.getElementById('creditsCount').textContent = r.data.credits;
       }
     } catch (e) { /* balance refreshes on next load */ }
   }
@@ -1401,7 +1480,7 @@
       }
 
       if (job.status === 'error') {
-        await refundCredits(window.lastJobCredits || 0);
+        await refreshBalance();
         genLabel.textContent = 'Render failed: ' + (job.error || 'unknown error') + ' — credits refunded';
         resetButton();
         return;
@@ -1409,7 +1488,7 @@
 
       // Job vanished — usually means the backend restarted mid-render.
       if (job.error === 'Job not found') {
-        await refundCredits(window.lastJobCredits || 0);
+        await refreshBalance();
         genLabel.textContent = 'Render lost (server restarted) — credits refunded';
         resetButton();
         return;
@@ -1418,7 +1497,7 @@
       genLabel.textContent = 'Rendering… ' + (job.progress || 0) + '%';
       setTimeout(function(){ pollJob(jobId); }, 2000);
     } catch (err) {
-      await refundCredits(window.lastJobCredits || 0);
+      await refreshBalance();
       var why = (err && err.name ? err.name + ': ' : '') +
                 (err && err.message ? err.message : String(err));
       console.error('pollJob failed:', err);
@@ -1433,7 +1512,6 @@
     const model = currentModel;
     const quality = currentRes;
     const duration = currentDuration;
-    const credits = creditsFor(currentModel, currentRes, currentDuration);
 
     // Must be logged in to generate
     if (!window.supabaseClient) {
@@ -1446,22 +1524,9 @@
       return;
     }
 
-    // Spend the credits in the database before rendering anything
-    var spend = await window.supabaseClient.rpc('spend_credits', { amount: credits });
-    if (spend.error) {
-      previewEmpty.style.display = 'none';
-      previewCanvas.classList.add('active');
-      genLabel.textContent = 'Could not check your credits — try again.';
-      return;
-    }
-    if (spend.data === -1) {
-      previewEmpty.style.display = 'none';
-      previewCanvas.classList.add('active');
-      genLabel.textContent = 'Not enough credits — buy more to keep generating.';
-      return;
-    }
-    // Update the badge with the new balance
-    document.getElementById('creditsCount').textContent = spend.data;
+    // Credits are spent by the backend, which works out the price itself.
+    // Doing it here too would double-charge, and the browser can't be
+    // trusted to pick the amount anyway.
 
     resultBadge.textContent = quality.toUpperCase() + ' · ' + ratio + ' · ' + duration + 's';
 
@@ -1482,11 +1547,26 @@
       const res = await fetch(`${window.BACKEND_URL}/api/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, ratio, model, quality, duration, credits, image: imageUrl })
+        body: JSON.stringify({
+          prompt, ratio, model, quality, duration,
+          image: imageUrl,
+          accessToken: sessionRes.data.session.access_token
+        })
       });
+
+      if (res.status === 402) {
+        genLabel.textContent = 'Not enough credits — buy more to keep generating.';
+        resetButton();
+        return;
+      }
       if (!res.ok) throw new Error('Backend not reachable');
-      const { jobId } = await res.json();
-      pollJob(jobId);
+
+      const payload = await res.json();
+      // Backend returns the balance left after taking payment
+      if (typeof payload.balance === 'number') {
+        document.getElementById('creditsCount').textContent = payload.balance;
+      }
+      pollJob(payload.jobId);
     } catch (err) {
       genLabel.textContent = 'Backend not running — see setup instructions';
       resetButton();
