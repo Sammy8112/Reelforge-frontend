@@ -550,6 +550,52 @@
     font-family:var(--mono); font-size:11px; color:var(--ink-faint);
   }
 
+  /* ---------- ACCOUNT MENU ---------- */
+  .account{ position:relative; display:inline-flex; }
+  .avatar{
+    width:40px; height:40px; border-radius:50%;
+    background:var(--signal); color:#fff;
+    border:2px solid transparent; cursor:pointer;
+    font-family:var(--display); font-size:16px; font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+    text-transform:uppercase; padding:0; line-height:1;
+    transition:border-color .15s ease, transform .15s ease;
+  }
+  .avatar:hover{ transform:translateY(-1px); }
+  .account.open .avatar{ border-color:var(--ink); }
+
+  .account-menu{
+    position:absolute; top:calc(100% + 10px); right:0;
+    min-width:216px; padding:6px;
+    background:var(--bg-raised); border:1px solid var(--line);
+    border-radius:12px; box-shadow:0 18px 44px rgba(0,0,0,0.6);
+    display:none; z-index:200;
+  }
+  .account.open .account-menu{ display:block; }
+
+  .account-head{ padding:11px 12px 12px; border-bottom:1px solid var(--line); margin-bottom:6px; }
+  .account-email{
+    font-size:13px; color:var(--ink); font-weight:500;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .account-credits{
+    font-family:var(--mono); font-size:11px; color:var(--ink-dim); margin-top:5px;
+  }
+  .account-credits span{ color:var(--amber); font-weight:500; }
+
+  .account-item{
+    display:block; width:100%; text-align:left;
+    padding:10px 12px; border-radius:8px; border:none; background:none;
+    font-family:var(--body); font-size:14px; color:var(--ink-dim);
+    cursor:pointer; text-decoration:none;
+  }
+  .account-item:hover{ background:var(--bg); color:var(--ink); }
+  .account-item.danger:hover{ color:var(--signal); }
+
+  @media(max-width:900px){
+    .account-menu{ min-width:190px; }
+  }
+
   .new-badge{
     display:inline-block; font-family:var(--mono); font-size:9px; font-weight:700;
     letter-spacing:0.04em; padding:2px 5px; margin-left:6px; border-radius:4px;
@@ -675,12 +721,26 @@
         <a href="#pricing">Pricing</a>
       </div>
       <div class="navcta">
-        <a href="profile.html" class="btn btn-ghost" id="profileBtn" style="display:none;">Your videos</a>
-        <span class="credits-badge" id="creditsBadge" style="display:none;"><span id="creditsCount">–</span> credits</span>
+        <!-- Signed out -->
         <a href="#" class="btn btn-ghost" id="loginBtn" onclick="document.getElementById('authOverlay').classList.add('active');document.getElementById('authTitle').textContent='Log in';document.getElementById('authSubmit').textContent='Log in';window.authMode='login';return false;">Log in</a>
         <span class="signup-wrap"><span class="signup-hint" id="signupHint"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V6"/><path d="M6 11l6-6 6 6"/></svg>100 free credits</span><a href="#" class="btn btn-primary" id="signupBtn" onclick="document.getElementById('authOverlay').classList.add('active');document.getElementById('authTitle').textContent='Sign up';document.getElementById('authSubmit').textContent='Sign up';window.authMode='signup';return false;">Sign up</a></span>
-        <a href="#" class="btn btn-ghost" id="logoutBtn" style="display:none;" onclick="if(window.supabaseClient){window.supabaseClient.auth.signOut();}return false;">Log out</a>
-        <a href="#studio" class="btn btn-primary">Start generating</a>
+
+        <!-- Signed in -->
+        <div class="account" id="account" style="display:none;">
+          <button class="avatar" id="avatarBtn" aria-label="Your account" aria-expanded="false">
+            <span id="avatarInitial">·</span>
+          </button>
+          <div class="account-menu" id="accountMenu">
+            <div class="account-head">
+              <div class="account-email" id="menuEmail">—</div>
+              <div class="account-credits"><span id="creditsCount">–</span> credits</div>
+            </div>
+            <a href="profile.html" class="account-item">Your videos</a>
+            <a href="#studio" class="account-item">New video</a>
+            <a href="#pricing" class="account-item">Buy credits</a>
+            <button class="account-item danger" id="logoutBtn">Log out</button>
+          </div>
+        </div>
       </div>
     </nav>
   </div>
@@ -1047,8 +1107,9 @@
   const loginBtn = document.getElementById('loginBtn');
   const signupBtn = document.getElementById('signupBtn');
   const logoutBtn = document.getElementById('logoutBtn');
-  const creditsBadge = document.getElementById('creditsBadge');
   const creditsCount = document.getElementById('creditsCount');
+  const account = document.getElementById('account');
+  const avatarBtn = document.getElementById('avatarBtn');
 
 
   // Nav buttons use inline onclick in the HTML, so they work even if
@@ -1166,30 +1227,64 @@
 
   // ---- Reflect login state in the nav ----
   async function refreshAuthUI(session){
+    var signupWrap = document.querySelector('.signup-wrap');
+    var hint = document.getElementById('signupHint');
+    var locked = document.getElementById('studioLocked');
+
     if (session?.user) {
+      // Signed in: just the account avatar, everything else lives in its menu.
       loginBtn.style.display = 'none';
-      signupBtn.style.display = 'none';
-      logoutBtn.style.display = 'inline-flex';
-      creditsBadge.style.display = 'inline-flex';
-      var pb = document.getElementById('profileBtn');
-      if (pb) pb.style.display = 'inline-flex';
-      var hint = document.getElementById('signupHint');
+      if (signupWrap) signupWrap.style.display = 'none';
       if (hint) hint.style.display = 'none';
-      var locked = document.getElementById('studioLocked');
       if (locked) locked.style.display = 'none';
+      account.style.display = 'inline-flex';
+
+      var email = session.user.email || '';
+      document.getElementById('menuEmail').textContent = email;
+      document.getElementById('avatarInitial').textContent =
+        email ? email.charAt(0) : '·';
+
       loadCredits(session.user.id);
     } else {
+      // Signed out: only log in and sign up.
       loginBtn.style.display = 'inline-flex';
-      signupBtn.style.display = 'inline-flex';
-      logoutBtn.style.display = 'none';
-      creditsBadge.style.display = 'none';
-      var pb2 = document.getElementById('profileBtn');
-      if (pb2) pb2.style.display = 'none';
-      var hint2 = document.getElementById('signupHint');
-      if (hint2) hint2.style.display = 'flex';
-      var locked2 = document.getElementById('studioLocked');
-      if (locked2) locked2.style.display = 'block';
+      if (signupWrap) signupWrap.style.display = 'inline-flex';
+      if (hint) hint.style.display = 'flex';
+      if (locked) locked.style.display = 'block';
+      account.style.display = 'none';
+      account.classList.remove('open');
     }
+  }
+
+  // ---- Account dropdown ----
+  if (avatarBtn) {
+    avatarBtn.addEventListener('click', function(e){
+      e.stopPropagation();
+      var open = account.classList.toggle('open');
+      avatarBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    document.addEventListener('click', function(e){
+      if (!account.contains(e.target)) {
+        account.classList.remove('open');
+        avatarBtn.setAttribute('aria-expanded', 'false');
+      }
+    });
+    document.addEventListener('keydown', function(e){
+      if (e.key === 'Escape') {
+        account.classList.remove('open');
+        avatarBtn.setAttribute('aria-expanded', 'false');
+      }
+    });
+    // Menu links should close the menu behind them
+    account.querySelectorAll('.account-item').forEach(function(item){
+      item.addEventListener('click', function(){ account.classList.remove('open'); });
+    });
+  }
+
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', function(){
+      if (window.supabaseClient) window.supabaseClient.auth.signOut();
+    });
   }
 
   if (sbClient) {
