@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your profile — REELFORGE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #121214;
+    --bg-raised: #19191c;
+    --line: #2b2b2f;
+    --ink: #F2F0EC;
+    --ink-dim: #9a9a9f;
+    --ink-faint: #616166;
+    --signal: #FF3B30;
+    --amber: #F5A623;
+    --mono: 'JetBrains Mono', monospace;
+    --display: 'Space Grotesk', sans-serif;
+    --body: 'Inter', sans-serif;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:var(--body); -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  a{ color:inherit; text-decoration:none; }
+  .wrap{ max-width:1180px; margin:0 auto; padding:0 28px; }
+
+  /* ---------- NAV ---------- */
+  header{
+    position:sticky; top:0; z-index:100;
+    background:rgba(18,18,20,0.85); backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  nav{ display:flex; align-items:center; justify-content:space-between; padding:18px 0; }
+  .logo{ font-family:var(--display); font-weight:700; font-size:20px; display:flex; align-items:center; gap:9px; }
+  .logo .dot{ width:9px; height:9px; border-radius:50%; background:var(--signal); }
+  .navright{ display:flex; align-items:center; gap:18px; }
+  .credits-badge{
+    font-family:var(--body); font-size:13px; color:var(--ink-dim); font-weight:500;
+  }
+  .credits-badge b{ color:var(--ink); font-weight:600; }
+  .btn{
+    font-family:var(--body); font-size:14px; font-weight:600;
+    padding:10px 18px; border-radius:8px; border:1px solid transparent;
+    cursor:pointer; display:inline-flex; align-items:center; gap:8px;
+    transition:transform .15s ease, border-color .15s ease;
+  }
+  .btn-primary{ background:var(--ink); color:var(--bg); }
+  .btn-primary:hover{ transform:translateY(-1px); }
+  .btn-ghost{ border-color:var(--line); color:var(--ink-dim); }
+  .btn-ghost:hover{ border-color:var(--ink-dim); color:var(--ink); }
+
+  /* ---------- HEAD ---------- */
+  .page-head{ padding:56px 0 34px; }
+  .tag{
+    font-family:var(--mono); font-size:11px; letter-spacing:0.14em;
+    text-transform:uppercase; color:var(--signal); display:block; margin-bottom:14px;
+  }
+  h1{ font-family:var(--display); font-size:42px; font-weight:700; letter-spacing:-0.02em; }
+  .sub{ color:var(--ink-dim); margin-top:10px; font-size:15px; line-height:1.6; }
+
+  .meta-row{
+    display:flex; flex-wrap:wrap; gap:14px; margin-top:28px;
+  }
+  .meta-card{
+    border:1px solid var(--line); background:var(--bg-raised);
+    border-radius:12px; padding:16px 20px; min-width:150px;
+  }
+  .meta-card .k{
+    font-family:var(--mono); font-size:10px; letter-spacing:0.1em;
+    text-transform:uppercase; color:var(--ink-faint);
+  }
+  .meta-card .v{
+    font-family:var(--display); font-size:24px; font-weight:600; margin-top:6px;
+    word-break:break-all;
+  }
+  .meta-card .v.small{ font-size:15px; font-weight:500; }
+
+  /* ---------- GALLERY ---------- */
+  .section-head{ margin:52px 0 22px; display:flex; align-items:baseline; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+  .section-head h2{ font-family:var(--display); font-size:26px; font-weight:600; }
+  .count{ font-family:var(--mono); font-size:12px; color:var(--ink-faint); }
+
+  .grid{
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(232px, 1fr));
+    gap:18px; padding-bottom:80px;
+  }
+  .card{
+    border:1px solid var(--line); border-radius:14px; overflow:hidden;
+    background:var(--bg-raised);
+  }
+  .card .vidwrap{ position:relative; width:100%; aspect-ratio:9/16; background:#0d0d0f; }
+  .card video{ width:100%; height:100%; object-fit:cover; display:block; }
+  .card .info{ padding:13px 14px 15px; }
+  .card .prompt{
+    font-size:13px; line-height:1.45; color:var(--ink);
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+    overflow:hidden;
+  }
+  .card .specs{
+    font-family:var(--mono); font-size:10.5px; color:var(--ink-faint);
+    margin-top:9px; display:flex; flex-wrap:wrap; gap:7px;
+  }
+  .card .actions{ margin-top:12px; display:flex; gap:8px; }
+  .mini{
+    font-family:var(--body); font-size:12px; font-weight:500;
+    padding:7px 11px; border-radius:7px; border:1px solid var(--line);
+    color:var(--ink-dim); cursor:pointer; background:none; flex:1; text-align:center;
+  }
+  .mini:hover{ border-color:var(--ink-dim); color:var(--ink); }
+  .mini.muted{ color:var(--ink-faint); cursor:default; }
+  .mini.muted:hover{ border-color:var(--line); color:var(--ink-faint); }
+
+  .card.expired .vidwrap{ background:#161618; }
+  .gone{
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:9px;
+    color:var(--ink-faint); font-family:var(--mono); font-size:10.5px;
+    letter-spacing:0.04em; text-align:center; padding:14px;
+  }
+
+  .notice{
+    border:1px solid var(--line); background:var(--bg-raised);
+    border-radius:10px; padding:13px 16px; margin-bottom:22px;
+    font-size:13px; color:var(--ink-dim); line-height:1.55;
+  }
+  .notice b{ color:var(--ink); font-weight:600; }
+
+  /* ---------- STATES ---------- */
+  .state{
+    border:1px dashed var(--line); border-radius:14px;
+    padding:56px 28px; text-align:center; color:var(--ink-dim);
+    margin-bottom:80px;
+  }
+  .state h3{ font-family:var(--display); font-size:19px; color:var(--ink); margin-bottom:8px; font-weight:600; }
+  .state p{ font-size:14px; line-height:1.6; max-width:400px; margin:0 auto 20px; }
+  .spinner{
+    width:26px; height:26px; border-radius:50%;
+    border:3px solid var(--line); border-top-color:var(--signal);
+    animation:spin 0.8s linear infinite; margin:0 auto 16px;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .hidden{ display:none !important; }
+
+  @media(max-width:640px){
+    h1{ font-size:32px; }
+    .wrap{ padding:0 18px; }
+    .grid{ grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:12px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <nav>
+      <a href="/" class="logo"><span class="dot"></span>REELFORGE</a>
+      <div class="navright">
+        <span class="credits-badge hidden" id="creditsBadge"><b id="creditsCount">–</b> credits</span>
+        <a href="/#pricing" class="btn btn-ghost">Buy credits</a>
+        <a href="/#studio" class="btn btn-primary">New video</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- Signed out -->
+  <div id="loggedOut" class="state hidden" style="margin-top:80px;">
+    <h3>You're not logged in</h3>
+    <p>Log in on the main page to see the videos you've made.</p>
+    <a href="/" class="btn btn-primary">Go to REELFORGE</a>
+  </div>
+
+  <!-- Signed in -->
+  <div id="profile" class="hidden">
+    <div class="page-head">
+      <span class="tag">Your profile</span>
+      <h1>Your videos</h1>
+      <p class="sub">Everything you've generated, kept in one place.</p>
+
+      <div class="meta-row">
+        <div class="meta-card">
+          <div class="k">Signed in as</div>
+          <div class="v small" id="metaEmail">—</div>
+        </div>
+        <div class="meta-card">
+          <div class="k">Credits</div>
+          <div class="v" id="metaCredits">—</div>
+        </div>
+        <div class="meta-card">
+          <div class="k">Videos made</div>
+          <div class="v" id="metaCount">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-head">
+      <h2>Your gallery</h2>
+      <span class="count" id="galleryCount"></span>
+    </div>
+
+    <p class="notice">
+      Your <b>10 most recent</b> videos stay playable here. Older ones drop off the
+      list to save space — hit <b>Save</b> on anything you want to keep for good.
+    </p>
+
+    <div id="loading" class="state">
+      <div class="spinner"></div>
+      Loading your videos…
+    </div>
+
+    <div id="empty" class="state hidden">
+      <h3>Nothing here yet</h3>
+      <p>Videos you generate will show up here automatically, so you can come back to them any time.</p>
+      <a href="/#studio" class="btn btn-primary">Make your first video</a>
+    </div>
+
+    <div id="failed" class="state hidden">
+      <h3>Couldn't load your videos</h3>
+      <p id="failedMsg">Something went wrong. Try reloading the page.</p>
+    </div>
+
+    <div class="grid hidden" id="grid"></div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  var SUPABASE_URL = 'https://pfadvhajdeawxemqxmsj.supabase.co';
+  var SUPABASE_ANON_KEY = 'sb_publishable_h6Az7S8QZG8SqeiGtidjhA_F77Per2G';
+
+  var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  var el = function(id){ return document.getElementById(id); };
+  function show(id){ el(id).classList.remove('hidden'); }
+  function hide(id){ el(id).classList.add('hidden'); }
+
+  function escapeHtml(s){
+    return String(s || '').replace(/[&<>"']/g, function(c){
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+    });
+  }
+
+  function formatDate(iso){
+    try {
+      var d = new Date(iso);
+      return d.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+    } catch(e){ return ''; }
+  }
+
+  async function saveVideo(url, btn){
+    var original = btn.textContent;
+    btn.textContent = 'Saving…';
+    try {
+      var res = await fetch(url);
+      var blob = await res.blob();
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'reelforge-' + Date.now() + '.mp4';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(a.href);
+      btn.textContent = 'Saved';
+    } catch (err) {
+      // Safari sometimes blocks the blob download — open it instead.
+      window.open(url, '_blank');
+      btn.textContent = original;
+    }
+    setTimeout(function(){ btn.textContent = original; }, 2200);
+  }
+
+  function renderCard(r){
+    var specs = [];
+    if (r.quality)  specs.push(escapeHtml(r.quality.toUpperCase()));
+    if (r.ratio)    specs.push(escapeHtml(r.ratio));
+    if (r.duration) specs.push(r.duration + 's');
+    if (r.credits)  specs.push(r.credits.toLocaleString() + ' cr');
+
+    // Only the newest few clips are kept playable. Older ones keep their
+    // history row but the video file has been cleared.
+    var expired = !r.video_url;
+
+    var card = document.createElement('div');
+    card.className = 'card' + (expired ? ' expired' : '');
+
+    var media = expired
+      ? '<div class="gone">' +
+          '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+          'stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="9"/>' +
+          '<path d="M12 7v5l3 2"/></svg>' +
+          '<span>No longer stored</span>' +
+        '</div>'
+      : '<video src="' + escapeHtml(r.video_url) + '" preload="metadata" ' +
+        'controls playsinline muted loop></video>';
+
+    var action = expired
+      ? '<span class="mini muted">Expired</span>'
+      : '<button class="mini" data-dl="1">Save</button>';
+
+    card.innerHTML =
+      '<div class="vidwrap">' + media + '</div>' +
+      '<div class="info">' +
+        '<div class="prompt">' + (escapeHtml(r.prompt) || '<span style="color:var(--ink-faint)">No prompt saved</span>') + '</div>' +
+        '<div class="specs">' + specs.map(function(s){ return '<span>' + s + '</span>'; }).join('') +
+          '<span style="color:var(--ink-faint)">' + formatDate(r.created_at) + '</span>' +
+        '</div>' +
+        '<div class="actions">' + action + '</div>' +
+      '</div>';
+
+    var dl = card.querySelector('[data-dl]');
+    if (dl) dl.addEventListener('click', function(){ saveVideo(r.video_url, this); });
+    return card;
+  }
+
+  async function load(){
+    var sessionRes = await sb.auth.getSession();
+    var session = sessionRes.data.session;
+
+    if (!session) {
+      hide('profile');
+      show('loggedOut');
+      return;
+    }
+
+    show('profile');
+    el('metaEmail').textContent = session.user.email;
+
+    // Credits badge
+    try {
+      var p = await sb.from('profiles').select('credits').eq('id', session.user.id).single();
+      if (!p.error && p.data) {
+        el('metaCredits').textContent = p.data.credits.toLocaleString();
+        el('creditsCount').textContent = p.data.credits.toLocaleString();
+        el('creditsBadge').classList.remove('hidden');
+      }
+    } catch (e) { /* not critical */ }
+
+    // Renders — RLS means this only ever returns the user's own rows.
+    var r = await sb.from('renders')
+      .select('id, video_url, prompt, model, quality, ratio, duration, credits, created_at')
+      .order('created_at', { ascending: false });
+
+    hide('loading');
+
+    if (r.error) {
+      show('failed');
+      el('failedMsg').textContent = r.error.message || 'Something went wrong. Try reloading the page.';
+      el('metaCount').textContent = '—';
+      return;
+    }
+
+    var rows = r.data || [];
+    el('metaCount').textContent = rows.length.toLocaleString();
+
+    if (!rows.length) {
+      show('empty');
+      return;
+    }
+
+    el('galleryCount').textContent = rows.length + (rows.length === 1 ? ' video' : ' videos');
+    var grid = el('grid');
+    rows.forEach(function(row){ grid.appendChild(renderCard(row)); });
+    show('grid');
+  }
+
+  sb.auth.onAuthStateChange(function(_event, session){
+    if (!session) { hide('profile'); show('loggedOut'); }
+  });
+
+  load();
+</script>
+
+</body>
+</html>
