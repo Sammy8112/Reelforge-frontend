@@ -596,6 +596,69 @@
     .account-menu{ min-width:190px; }
   }
 
+  /* ---------- GALLERY CLIP MODAL ---------- */
+  .clip{ cursor:pointer; }
+  .clip-hint{
+    position:absolute; left:10px; bottom:10px; z-index:2;
+    font-family:var(--mono); font-size:10px; letter-spacing:0.06em;
+    color:#fff; background:rgba(0,0,0,0.55); border:1px solid rgba(255,255,255,0.18);
+    padding:5px 9px; border-radius:6px; opacity:0; transition:opacity .18s ease;
+    pointer-events:none;
+  }
+  .clip:hover .clip-hint, .clip:focus-visible .clip-hint{ opacity:1; }
+
+  .clip-overlay{
+    position:fixed; inset:0; z-index:400;
+    background:rgba(0,0,0,0.82); backdrop-filter:blur(6px);
+    display:none; align-items:center; justify-content:center; padding:24px;
+  }
+  .clip-overlay.active{ display:flex; }
+
+  .clip-modal{
+    position:relative; width:100%; max-width:900px;
+    max-height:88vh; overflow:auto;
+    background:var(--bg-raised); border:1px solid var(--line);
+    border-radius:16px; display:grid; grid-template-columns:1fr 300px;
+  }
+  .clip-player{
+    position:relative; background:#000;
+    aspect-ratio:9/16; max-height:88vh;
+    border-radius:16px 0 0 16px; overflow:hidden;
+  }
+  .clip-info{ padding:24px; display:flex; flex-direction:column; gap:12px; }
+  .clip-label{
+    font-family:var(--mono); font-size:10px; letter-spacing:0.1em; color:var(--ink-faint);
+  }
+  .clip-prompt{
+    font-size:14px; line-height:1.6; color:var(--ink-dim);
+    background:var(--bg); border:1px solid var(--line);
+    border-radius:10px; padding:14px;
+  }
+  .clip-meta{
+    font-family:var(--mono); font-size:11px; color:var(--ink-faint); margin-top:2px;
+  }
+  .clip-ref{
+    width:100%; max-height:150px; object-fit:cover;
+    border:1px solid var(--line); border-radius:10px;
+    margin-top:8px; display:block; background:var(--bg);
+  }
+  #clipRefWrap{ display:flex; flex-direction:column; gap:2px; }
+  .clip-info .btn{ margin-top:auto; justify-content:center; }
+
+  .clip-close{
+    position:absolute; top:12px; right:14px; z-index:5;
+    width:34px; height:34px; border-radius:50%;
+    background:rgba(0,0,0,0.55); border:1px solid rgba(255,255,255,0.18);
+    color:#fff; font-size:22px; line-height:1; cursor:pointer;
+  }
+  .clip-close:hover{ background:rgba(0,0,0,0.8); }
+
+  @media(max-width:760px){
+    .clip-modal{ grid-template-columns:1fr; max-height:92vh; }
+    .clip-player{ border-radius:16px 16px 0 0; aspect-ratio:9/14; }
+    .clip-info{ padding:18px; }
+  }
+
   .new-badge{
     display:inline-block; font-family:var(--mono); font-size:9px; font-weight:700;
     letter-spacing:0.04em; padding:2px 5px; margin-left:6px; border-radius:4px;
@@ -1749,12 +1812,32 @@
   // ---- Gallery ----
   // Paste the public URL of each showcase video here. Leave the list empty
   // and the whole gallery section hides itself.
+  // Each gallery clip carries the prompt that made it, so visitors can open
+  // it, read the prompt and load it straight into the generator. Add new
+  // entries here — url is required, everything else is optional.
+  //   url     : the video (required)
+  //   prompt  : the text prompt used
+  //   image   : the reference photo, if the clip started from one
+  //   model / quality / ratio : shown as small metadata
   var GALLERY_VIDEOS = [
-  'https://pfadvhajdeawxemqxmsj.supabase.co/storage/v1/object/public/Gallery/reelforge-1787692255465.mp4',
-  'https://pfadvhajdeawxemqxmsj.supabase.co/storage/v1/object/public/Gallery/reelforge-1787751510528.mp4',
-  'https://pfadvhajdeawxemqxmsj.supabase.co/storage/v1/object/public/Gallery/reelforge-1787751786350.mp4',
-  'https://pfadvhajdeawxemqxmsj.supabase.co/storage/v1/object/public/Gallery/reelforge-1787752053538.mp4'
-];
+    {
+      url: 'https://pfadvhajdeawxemqxmsj.supabase.co/storage/v1/object/public/Gallery/reelforge-1787692255465.mp4',
+      prompt: 'A red fox stepping through deep snow in a winter forest, low winter sun, shallow depth of field, cinematic',
+      model: 'Seedance 2.0', quality: '1080p', ratio: '9:16'
+    },
+    {
+      url: 'https://pfadvhajdeawxemqxmsj.supabase.co/storage/v1/object/public/Gallery/reelforge-1787751510528.mp4',
+      prompt: '', model: 'Seedance 2.0', quality: '1080p', ratio: '9:16'
+    },
+    {
+      url: 'https://pfadvhajdeawxemqxmsj.supabase.co/storage/v1/object/public/Gallery/reelforge-1787751786350.mp4',
+      prompt: '', model: 'Seedance 2.0', quality: '1080p', ratio: '9:16'
+    },
+    {
+      url: 'https://pfadvhajdeawxemqxmsj.supabase.co/storage/v1/object/public/Gallery/reelforge-1787752053538.mp4',
+      prompt: '', model: 'Seedance 2.0', quality: '1080p', ratio: '9:16'
+    }
+  ];
 
 
   (function renderGallery(){
@@ -1767,13 +1850,91 @@
       return;
     }
 
-    GALLERY_VIDEOS.forEach(function(url){
+    GALLERY_VIDEOS.forEach(function(item, i){
+      // Tolerate plain URL strings as well as objects.
+      var v = (typeof item === 'string') ? { url: item } : item;
       var wrap = document.createElement('div');
       wrap.className = 'clip';
+      wrap.setAttribute('role', 'button');
+      wrap.setAttribute('tabindex', '0');
       wrap.innerHTML =
-        '<video src="' + url + '" muted loop playsinline autoplay preload="metadata" ' +
-        'style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;"></video>';
+        '<video src="' + v.url + '" muted loop playsinline autoplay preload="metadata" ' +
+        'style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;"></video>' +
+        (v.prompt ? '<div class="clip-hint">View prompt</div>' : '');
+
+      function open(){ openClip(v); }
+      wrap.addEventListener('click', open);
+      wrap.addEventListener('keydown', function(e){
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
+      });
       grid.appendChild(wrap);
+    });
+  })();
+
+  // ---- Gallery detail modal ----
+  function openClip(v){
+    var ov = document.getElementById('clipOverlay');
+    if (!ov) return;
+
+    document.getElementById('clipVideo').innerHTML =
+      '<video src="' + v.url + '" controls playsinline autoplay loop ' +
+      'style="width:100%;height:100%;object-fit:contain;position:absolute;inset:0;"></video>';
+
+    var promptBox = document.getElementById('clipPrompt');
+    var useBtn = document.getElementById('clipUse');
+    if (v.prompt) {
+      promptBox.textContent = v.prompt;
+      promptBox.style.display = 'block';
+      useBtn.style.display = 'inline-flex';
+      useBtn.onclick = function(){
+        var ta = document.getElementById('prompt');
+        if (ta) ta.value = v.prompt;
+        closeClip();
+        var studio = document.getElementById('studio');
+        if (studio) studio.scrollIntoView({ behavior:'smooth' });
+        if (ta) setTimeout(function(){ ta.focus(); }, 500);
+      };
+    } else {
+      promptBox.style.display = 'none';
+      useBtn.style.display = 'none';
+    }
+
+    // Show the starting photo when the clip was made from one, so people can
+    // see that image-to-video is a thing the tool does.
+    var refWrap = document.getElementById('clipRefWrap');
+    var refImg  = document.getElementById('clipRef');
+    if (v.image) {
+      refImg.src = v.image;
+      refWrap.style.display = 'block';
+    } else {
+      refImg.removeAttribute('src');
+      refWrap.style.display = 'none';
+    }
+
+    var meta = [];
+    if (v.model)   meta.push(v.model);
+    if (v.quality) meta.push(v.quality);
+    if (v.ratio)   meta.push(v.ratio);
+    document.getElementById('clipMeta').textContent = meta.join('  ·  ');
+
+    ov.classList.add('active');
+  }
+
+  function closeClip(){
+    var ov = document.getElementById('clipOverlay');
+    if (!ov) return;
+    ov.classList.remove('active');
+    document.getElementById('clipVideo').innerHTML = ''; // stop playback
+  }
+
+  (function(){
+    var ov = document.getElementById('clipOverlay');
+    if (!ov) return;
+    ov.addEventListener('click', function(e){ if (e.target === ov) closeClip(); });
+    var x = document.getElementById('clipClose');
+    if (x) x.addEventListener('click', closeClip);
+    document.addEventListener('keydown', function(e){
+      if (e.key === 'Escape') closeClip();
     });
   })();
 
@@ -1783,6 +1944,26 @@
   }, { threshold: 0.15 });
   document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
 </script>
+
+<!-- Gallery clip detail -->
+<div class="clip-overlay" id="clipOverlay">
+  <div class="clip-modal">
+    <button class="clip-close" id="clipClose" aria-label="Close">&times;</button>
+    <div class="clip-player" id="clipVideo"></div>
+    <div class="clip-info">
+      <div class="clip-label">PROMPT</div>
+      <div class="clip-prompt" id="clipPrompt"></div>
+
+      <div id="clipRefWrap" style="display:none;">
+        <div class="clip-label">REFERENCE IMAGE</div>
+        <img class="clip-ref" id="clipRef" alt="Reference image used for this clip">
+      </div>
+
+      <div class="clip-meta" id="clipMeta"></div>
+      <button class="btn btn-primary" id="clipUse">Use this prompt</button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
