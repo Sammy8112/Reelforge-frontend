@@ -625,7 +625,8 @@
     aspect-ratio:9/16; max-height:88vh;
     border-radius:16px 0 0 16px; overflow:hidden;
   }
-  .clip-info{ padding:24px; display:flex; flex-direction:column; gap:12px; }
+  .clip-info{ padding:24px; display:flex; flex-direction:column; gap:12px; min-width:0; }
+  .clip-info > *{ flex:0 0 auto; }
   .clip-label{
     font-family:var(--mono); font-size:10px; letter-spacing:0.1em; color:var(--ink-faint);
   }
@@ -673,9 +674,20 @@
   .clip-close:hover{ background:rgba(0,0,0,0.8); }
 
   @media(max-width:760px){
-    .clip-modal{ grid-template-columns:1fr; max-height:92vh; }
-    .clip-player{ border-radius:16px 16px 0 0; aspect-ratio:9/14; }
+    .clip-overlay{ padding:12px; align-items:flex-start; }
+    .clip-modal{
+      grid-template-columns:1fr;
+      max-height:94vh; overflow-y:auto; -webkit-overflow-scrolling:touch;
+    }
+    /* Cap the video so the prompt below it is always on screen. */
+    .clip-player{
+      border-radius:16px 16px 0 0;
+      aspect-ratio:auto; height:46vh; max-height:46vh;
+    }
     .clip-info{ padding:18px; }
+    .clip-prompt{ font-size:13px; -webkit-line-clamp:5; }
+    .clip-prompt.open{ max-height:none; overflow:visible; }
+    .clip-ref{ max-height:120px; }
   }
 
   .new-badge{
