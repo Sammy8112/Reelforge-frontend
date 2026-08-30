@@ -630,10 +630,23 @@
     font-family:var(--mono); font-size:10px; letter-spacing:0.1em; color:var(--ink-faint);
   }
   .clip-prompt{
-    font-size:14px; line-height:1.6; color:var(--ink-dim);
+    font-size:12.5px; line-height:1.55; color:var(--ink-dim);
     background:var(--bg); border:1px solid var(--line);
-    border-radius:10px; padding:14px;
+    border-radius:10px; padding:13px;
+    white-space:pre-wrap;
+    display:-webkit-box; -webkit-box-orient:vertical;
+    -webkit-line-clamp:6; overflow:hidden;
   }
+  .clip-prompt.open{
+    -webkit-line-clamp:unset; display:block;
+    max-height:320px; overflow-y:auto;
+  }
+  .clip-more{
+    align-self:flex-start; background:none; border:none; padding:2px 0;
+    font-family:var(--mono); font-size:11px; letter-spacing:0.04em;
+    color:var(--ink-dim); cursor:pointer; text-decoration:underline;
+  }
+  .clip-more:hover{ color:var(--ink); }
   .clip-meta{
     display:flex; flex-wrap:wrap; gap:7px; margin-top:4px;
   }
@@ -1373,6 +1386,7 @@
     <div class="clip-info">
       <div class="clip-label">PROMPT</div>
       <div class="clip-prompt" id="clipPrompt"></div>
+      <button class="clip-more" id="clipMore">See all</button>
 
       <div id="clipRefWrap" style="display:none;">
         <div class="clip-label">REFERENCE IMAGE</div>
@@ -1847,32 +1861,35 @@
   //   model / quality / ratio : shown as small metadata
   var GALLERY_VIDEOS = [
     {
-      url: 'https://pfadvhajdeawxemqxmsj.supabase.co/storage/v1/object/public/Gallery/reelforge-1787692255465.mp4',
-      prompt: '',  // TODO: paste the real prompt you used
-      model: 'Seedance 2.0', quality: '1080p', ratio: '9:16'
+      url: "https://pfadvhajdeawxemqxmsj.supabase.co/storage/v1/object/public/Gallery/reelforge-1787692255465.mp4",
+      prompt: "",
+      model: "Seedance 2.0", quality: "1080p", ratio: "9:16"
     },
     {
-      url: 'https://pfadvhajdeawxemqxmsj.supabase.co/storage/v1/object/public/Gallery/reelforge-1787751510528.mp4',
-      prompt: '', model: 'Seedance 2.0', quality: '1080p', ratio: '9:16'
+      url: "https://pfadvhajdeawxemqxmsj.supabase.co/storage/v1/object/public/Gallery/reelforge-1787751510528.mp4",
+      prompt: "",
+      model: "Seedance 2.0", quality: "1080p", ratio: "9:16"
     },
     {
-      url: 'https://pfadvhajdeawxemqxmsj.supabase.co/storage/v1/object/public/Gallery/reelforge-1787751786350.mp4',
-      prompt: '', model: 'Seedance 2.0', quality: '1080p', ratio: '9:16'
+      url: "https://pfadvhajdeawxemqxmsj.supabase.co/storage/v1/object/public/Gallery/reelforge-1787751786350.mp4",
+      prompt: "",
+      model: "Seedance 2.0", quality: "1080p", ratio: "9:16"
     },
     {
-      url: 'https://pfadvhajdeawxemqxmsj.supabase.co/storage/v1/object/public/Gallery/reelforge-1787752053538.mp4',
-      prompt: '', model: 'Seedance 2.0', quality: '1080p', ratio: '9:16'
+      url: "https://pfadvhajdeawxemqxmsj.supabase.co/storage/v1/object/public/Gallery/reelforge-1787752053538.mp4",
+      prompt: "",
+      model: "Seedance 2.0", quality: "1080p", ratio: "9:16"
     },
     {
-      url: 'https://pfadvhajdeawxemqxmsj.supabase.co/storage/v1/object/public/Gallery/reelforge-1787924077888.mp4',
-      prompt: 'A gourmet cheeseburger floats weightlessly in an infinite pure black void, slowly rotating as its layers separate and drift apart into a suspended vertical stack \u2014 bun crown, sesame seeds catching light, melted cheese, seared patty, crisp lettuce, tomato slice, bun base, each ingredient isolated in mid-air. Hard rim lighting traces the edges of every layer against the darkness. Faint steam and crumbs drift in slow motion. No surface, no shadow, no background. Generous empty black space around the stack. Locked-off camera, extremely slow motion, shallow depth of field. Minimalist premium food commercial, photorealistic, macro detail, high contrast.',
-      model: 'Seedance 2.0', quality: '720p', ratio: '9:16', duration: 10
+      url: "https://pfadvhajdeawxemqxmsj.supabase.co/storage/v1/object/public/Gallery/reelforge-1787924077888.mp4",
+      prompt: "A gourmet cheeseburger floats weightlessly in an infinite pure black void, slowly rotating as its layers separate and drift apart into a suspended vertical stack \u2014 bun crown, sesame seeds catching light, melted cheese, seared patty, crisp lettuce, tomato slice, bun base, each ingredient isolated in mid-air. Hard rim lighting traces the edges of every layer against the darkness. Faint steam and crumbs drift in slow motion. No surface, no shadow, no background. Generous empty black space around the stack. Locked-off camera, extremely slow motion, shallow depth of field. Minimalist premium food commercial, photorealistic, macro detail, high contrast.",
+      model: "Seedance 2.0", quality: "720p", ratio: "9:16", duration: 10
     },
     {
-      url: 'https://pfadvhajdeawxemqxmsj.supabase.co/storage/v1/object/public/Gallery/reelforge-1788114260968.mp4',
-      prompt: 'The interior of a hatchback car parked at a mountain overlook at golden hour, shot from the rear passenger seat. A young man in a mustard-orange hoodie sits in the driver\u2019s seat, the low sun throwing a warm rim of light along his cheekbone and shoulder, a hazy mountain ridge through the open window. He turns to camera, speaks one line to the lens, and settles. The camera pushes forward on one slow continuous dolly \u2014 no cuts, no pan, no reframing. Shot on a fast prime wide open: shallow focus on his face, the mountains dissolved into soft haze. Photoreal, natural available light, fine grain, no grading. Real skin texture throughout \u2014 visible pores, fine stubble, individual eyelashes \u2014 no smoothing, no beauty filter.',
-      image: 'https://pfadvhajdeawxemqxmsj.supabase.co/storage/v1/object/public/reference-images/eb7b1e97-a922-4bd9-8053-b04d1066bce2/1788113748136.jpeg',
-      model: 'Seedance 2.5', quality: '1080p', ratio: 'from photo', duration: 5
+      url: "https://pfadvhajdeawxemqxmsj.supabase.co/storage/v1/object/public/Gallery/reelforge-1788114260968.mp4",
+      prompt: "<<<image_1>>> = the exact scene: the interior of a hatchback car parked at a mountain overlook at golden hour, shot from the rear passenger seat looking forward across the cabin. A young man in his mid-twenties sits in the driver's seat in a warm mustard-orange hooded sweatshirt with the drawstrings hanging, dark grey jeans, short dark hair, clean-shaven jaw, seen from behind and slightly to his right so his profile catches the light. Black leather seats with red contrast stitching, a black dashboard, a small stars-and-stripes air freshener hanging from the rear-view mirror, a phone cable trailing across the centre console. Through the open driver's window: a vast hazy mountain ridge falling away into blue distance, pale washed-out sky above, low sun just out of frame throwing a warm rim of light along his cheekbone, ear and shoulder. Exactly this cabin, this man, this outfit, this view.\n\nTHE SETUP: he is sitting in the parked car, one hand resting on his thigh. He turns to camera, speaks one line to the lens, and settles. Nothing else happens in the shot.\n\nTHE ONE MOVEMENT: the camera begins in a MEDIUM SHOT from the rear seat, taking in his shoulder, the window and the ridge beyond, and pushes forward on one slow, perfectly continuous straight dolly \u2014 never stopping, never jumping \u2014 settling into a tighter three-quarter profile as he speaks. That is the only camera motion in the whole clip: no pan, no tilt, no orbit, no reframing, no cuts. Shot on a fast prime wide open: a shallow plane of focus holding his face, the mountains behind dissolved into soft haze, the dashboard falling off into blur in the foreground.\n\nTHE ARC \u2014 exact beats and timings:\n\n0.0\u20131.0s \u2014 already mid-turn toward the lens, unhurried, a small natural settling of the chin as he finds it; his eyes lock on, a trace of a smile, not a performance. The warm low sun catches the edge of his face.\n\n1.0\u20134.2s \u2014 he speaks one line straight to camera, relaxed and conversational, the way you'd say something to a friend in the passenger seat: \"Seedance two point five, ten-eighty, on ReelForge now.\" His mouth shapes each word clearly, small jaw and throat movements, a natural breath before he begins.\n\n4.2\u20135.0s \u2014 he holds the look for a beat and gives a small nod, eyes still on the lens. The clip ends on that hold.\n\nTHE LIGHT IS A KEY ELEMENT: the low sun sits just outside the frame beyond the window, throwing a hard warm rim along his cheekbone, jaw, ear and the shoulder of the hoodie, while the cabin interior stays deep and shadowed \u2014 a strong contrast between the glowing window side and the dark leather. The mustard hoodie should glow warm where the light strikes it and fall to deep amber in shadow.\n\nNATURAL SOUND: faint wind outside the open window, distant birds, the small creak of a leather seat as he turns, his voice close and dry with the flat acoustic of a car interior, one soft breath before the line. No music.\n\nREALISM: photoreal footage, natural available light only, natural colour, fine natural grain, no grading, no presets, no filters. Real physics: the air freshener sways gently, dust motes drift through the shaft of window light, the hoodie fabric creases as he turns his shoulders. His stillness is genuine and unforced \u2014 a person sitting in a parked car, not an actor waiting for a cue.\n\nHYPER-DETAILED, HUMAN FACE: real skin texture at all times \u2014 visible pores, fine stubble along the jaw, natural unevenness and colour variation, individual eyelashes, true moisture on the lips and eyes, small muscles moving around the mouth and eyes as he speaks \u2014 absolutely no smoothing, no beauty filter, no plastic skin.\n\nHe is exactly the man from <<<image_1>>> and the location is exactly <<<image_1>>>; correct anatomy, two arms, two legs, five fingers per hand, the same outfit throughout.",
+      image: "https://pfadvhajdeawxemqxmsj.supabase.co/storage/v1/object/public/reference-images/eb7b1e97-a922-4bd9-8053-b04d1066bce2/1788113748136.jpeg",
+      model: "Seedance 2.5", quality: "1080p", ratio: "from photo", duration: 5
     }
   ];
 
@@ -1918,10 +1935,25 @@
       'style="width:100%;height:100%;object-fit:contain;position:absolute;inset:0;"></video>';
 
     var promptBox = document.getElementById('clipPrompt');
+    var moreBtn = document.getElementById('clipMore');
     var useBtn = document.getElementById('clipUse');
     if (v.prompt) {
       promptBox.textContent = v.prompt;
-      promptBox.style.display = 'block';
+      promptBox.classList.remove('open');
+      promptBox.style.display = '-webkit-box';
+      moreBtn.textContent = 'See all';
+
+      // Only offer the toggle when the prompt is actually being cut off.
+      moreBtn.style.display = 'none';
+      setTimeout(function(){
+        if (promptBox.scrollHeight > promptBox.clientHeight + 4) {
+          moreBtn.style.display = 'block';
+        }
+      }, 0);
+      moreBtn.onclick = function(){
+        var open = promptBox.classList.toggle('open');
+        moreBtn.textContent = open ? 'Show less' : 'See all';
+      };
       useBtn.style.display = 'inline-flex';
       useBtn.onclick = function(){
         var ta = document.getElementById('prompt');
@@ -1933,6 +1965,7 @@
       };
     } else {
       promptBox.style.display = 'none';
+      moreBtn.style.display = 'none';
       useBtn.style.display = 'none';
     }
 
