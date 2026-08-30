@@ -635,7 +635,13 @@
     border-radius:10px; padding:14px;
   }
   .clip-meta{
-    font-family:var(--mono); font-size:11px; color:var(--ink-faint); margin-top:2px;
+    display:flex; flex-wrap:wrap; gap:7px; margin-top:4px;
+  }
+  .clip-meta span{
+    font-family:var(--mono); font-size:12px; font-weight:600;
+    letter-spacing:0.03em; color:var(--ink);
+    background:var(--bg); border:1px solid var(--line);
+    border-radius:7px; padding:7px 11px;
   }
   .clip-ref{
     width:100%; max-height:150px; object-fit:cover;
@@ -1359,6 +1365,26 @@
   }
 </script>
 
+<!-- Gallery clip detail -->
+<div class="clip-overlay" id="clipOverlay">
+  <div class="clip-modal">
+    <button class="clip-close" id="clipClose" aria-label="Close">&times;</button>
+    <div class="clip-player" id="clipVideo"></div>
+    <div class="clip-info">
+      <div class="clip-label">PROMPT</div>
+      <div class="clip-prompt" id="clipPrompt"></div>
+
+      <div id="clipRefWrap" style="display:none;">
+        <div class="clip-label">REFERENCE IMAGE</div>
+        <img class="clip-ref" id="clipRef" alt="Reference image used for this clip">
+      </div>
+
+      <div class="clip-meta" id="clipMeta"></div>
+      <button class="btn btn-primary" id="clipUse">Use this prompt</button>
+    </div>
+  </div>
+</div>
+
 <script>
   // preset selection
   function wireGroup(id){
@@ -1822,7 +1848,7 @@
   var GALLERY_VIDEOS = [
     {
       url: 'https://pfadvhajdeawxemqxmsj.supabase.co/storage/v1/object/public/Gallery/reelforge-1787692255465.mp4',
-      prompt: 'A red fox stepping through deep snow in a winter forest, low winter sun, shallow depth of field, cinematic',
+      prompt: '',  // TODO: paste the real prompt you used
       model: 'Seedance 2.0', quality: '1080p', ratio: '9:16'
     },
     {
@@ -1915,7 +1941,9 @@
     if (v.model)   meta.push(v.model);
     if (v.quality) meta.push(v.quality);
     if (v.ratio)   meta.push(v.ratio);
-    document.getElementById('clipMeta').textContent = meta.join('  ·  ');
+    if (v.duration) meta.push(v.duration + 's');
+    document.getElementById('clipMeta').innerHTML =
+      meta.map(function(t){ return '<span>' + t + '</span>'; }).join('');
 
     ov.classList.add('active');
   }
@@ -1945,25 +1973,6 @@
   document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
 </script>
 
-<!-- Gallery clip detail -->
-<div class="clip-overlay" id="clipOverlay">
-  <div class="clip-modal">
-    <button class="clip-close" id="clipClose" aria-label="Close">&times;</button>
-    <div class="clip-player" id="clipVideo"></div>
-    <div class="clip-info">
-      <div class="clip-label">PROMPT</div>
-      <div class="clip-prompt" id="clipPrompt"></div>
-
-      <div id="clipRefWrap" style="display:none;">
-        <div class="clip-label">REFERENCE IMAGE</div>
-        <img class="clip-ref" id="clipRef" alt="Reference image used for this clip">
-      </div>
-
-      <div class="clip-meta" id="clipMeta"></div>
-      <button class="btn btn-primary" id="clipUse">Use this prompt</button>
-    </div>
-  </div>
-</div>
 
 </body>
 </html>
