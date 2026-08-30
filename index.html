@@ -1570,11 +1570,33 @@
       if (job.status === 'complete' && job.videoUrl) {
         genLabel.textContent = 'Done — press play (with sound)';
         previewCanvas.innerHTML =
-          '<video src="' + job.videoUrl + '" controls playsinline ' +
+          '<video id="resultVideo" src="' + job.videoUrl + '" controls playsinline ' +
           'style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;"></video>' +
           '<button class="download-btn" id="downloadBtn">Save video</button>';
         var dl = document.getElementById('downloadBtn');
         if (dl) dl.addEventListener('click', function(){ saveVideo(job.videoUrl, dl); });
+
+        // The file has only just been uploaded to storage, and the public URL
+        // can 404 for a second or two while it propagates. Rather than leaving
+        // a dead player on screen, retry the load a few times before giving up.
+        (function(){
+          var vid = document.getElementById('resultVideo');
+          if (!vid) return;
+          var tries = 0;
+          vid.addEventListener('error', function retry(){
+            if (tries >= 4) {
+              genLabel.textContent = 'Done — preview unavailable, use Save video';
+              return;
+            }
+            tries++;
+            setTimeout(function(){
+              // Cache-bust so Safari re-requests instead of reusing the 404.
+              vid.src = job.videoUrl + (job.videoUrl.indexOf('?') === -1 ? '?' : '&') + 'r=' + tries;
+              vid.load();
+            }, tries * 1200);
+          });
+        })();
+
         resetButton();
         return;
       }
