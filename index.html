@@ -551,7 +551,15 @@
   }
 
   /* ---------- ACCOUNT MENU ---------- */
-  .account{ position:relative; display:inline-flex; }
+  .account{ position:relative; display:inline-flex; align-items:center; gap:10px; }
+  .credits-pill{
+    font-family:var(--mono); font-size:12px; font-weight:600;
+    color:var(--amber); background:var(--bg-raised);
+    border:1px solid var(--line); border-radius:999px;
+    padding:7px 12px; white-space:nowrap;
+  }
+  .credits-pill::after{ content:' cr'; color:var(--ink-faint); font-weight:400; }
+  @media(max-width:560px){ .credits-pill{ font-size:11px; padding:6px 9px; } }
   .avatar{
     width:40px; height:40px; border-radius:50%;
     background:var(--signal); color:#fff;
@@ -625,6 +633,8 @@
     aspect-ratio:9/16; max-height:88vh;
     border-radius:16px 0 0 16px; overflow:hidden;
   }
+  .clip-player.wide{ aspect-ratio:16/9; align-self:center; }
+  .clip.wide{ background:#000; }
   .clip-info{ padding:24px; display:flex; flex-direction:column; gap:12px; min-width:0; }
   .clip-info > *{ flex:0 0 auto; }
   .clip-label{
@@ -684,6 +694,7 @@
       border-radius:16px 16px 0 0;
       aspect-ratio:auto; height:46vh; max-height:46vh;
     }
+    .clip-player.wide{ aspect-ratio:auto; height:32vh; max-height:32vh; }
     .clip-info{ padding:18px; }
     .clip-prompt{ font-size:13px; -webkit-line-clamp:5; }
     .clip-prompt.open{ max-height:none; overflow:visible; }
@@ -821,6 +832,7 @@
 
         <!-- Signed in -->
         <div class="account" id="account" style="display:none;">
+          <span class="credits-pill" id="creditsPill"><span id="creditsCountNav">–</span></span>
           <button class="avatar" id="avatarBtn" aria-label="Your account" aria-expanded="false">
             <span id="avatarInitial">·</span>
           </button>
@@ -954,7 +966,7 @@
         <label>Model</label>
         <div class="ratio-row" id="modelGrid">
           <div class="preset active" data-model="seedance-2.0" data-desc="Best quality and the cheapest per second. Up to 4K, clips up to 15 seconds.">Seedance 2.0</div>
-          <div class="preset" data-model="seedance-2.5" data-desc="Clips up to 30 seconds. Costs more per second than 2.0 — use it when you need the length.">Seedance 2.5</div>
+          <div class="preset" data-model="seedance-2.5" data-desc="Clips up to 30 seconds. More advanced generation.">Seedance 2.5</div>
         </div>
         <p class="quality-desc" id="modelDesc">Best quality — up to 4K, clips up to 15 seconds.</p>
 
@@ -1202,6 +1214,16 @@
   const signupBtn = document.getElementById('signupBtn');
   const logoutBtn = document.getElementById('logoutBtn');
   const creditsCount = document.getElementById('creditsCount');
+  const creditsCountNav = document.getElementById('creditsCountNav');
+
+  // Credits show in two places (nav pill + account menu), so always set them
+  // through here rather than touching either element directly.
+  function setCredits(n){
+    var v = (n === null || n === undefined) ? '–' : Number(n).toLocaleString();
+    if (creditsCount) creditsCount.textContent = v;
+    if (creditsCountNav) creditsCountNav.textContent = v;
+  }
+  window.setCredits = setCredits;
   const account = document.getElementById('account');
   const avatarBtn = document.getElementById('avatarBtn');
 
@@ -1313,10 +1335,10 @@
       .single();
 
     if (error || !data) {
-      creditsCount.textContent = '0';
+      setCredits(0);
       return;
     }
-    creditsCount.textContent = data.credits;
+    setCredits(data.credits);
   }
 
   // ---- Reflect login state in the nav ----
@@ -1445,7 +1467,7 @@
     },
     'seedance-2.5': {
       label: 'Seedance 2.5',
-      desc: 'Clips up to 30 seconds. Costs more per second than 2.0 — use it when you need the length.',
+      desc: 'Clips up to 30 seconds. More advanced generation.',
       resolutions: [
         { id: '480p',  label: '480p',  desc: 'Longest clips, lowest cost. Good for story sequences.' },
         { id: '720p',  label: '720p',  desc: 'Sharper long-form clips, costs more per second.' },
@@ -1665,7 +1687,7 @@
         .from('profiles').select('credits')
         .eq('id', s.data.session.user.id).single();
       if (!r.error && r.data) {
-        document.getElementById('creditsCount').textContent = r.data.credits;
+        setCredits(r.data.credits);
       }
     } catch (e) { /* balance refreshes on next load */ }
   }
@@ -1801,7 +1823,7 @@
       const payload = await res.json();
       // Backend returns the balance left after taking payment
       if (typeof payload.balance === 'number') {
-        document.getElementById('creditsCount').textContent = payload.balance;
+        setCredits(payload.balance);
       }
       pollJob(payload.jobId);
     } catch (err) {
@@ -1928,6 +1950,16 @@
         'style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;"></video>' +
         (v.prompt ? '<div class="clip-hint">View prompt</div>' : '');
 
+      // Landscape clips get cropped to nothing by object-fit:cover in a 9:16
+      // tile, so switch them to contain once we know the real dimensions.
+      var tile = wrap.querySelector('video');
+      tile.addEventListener('loadedmetadata', function(){
+        if (this.videoWidth > this.videoHeight) {
+          this.style.objectFit = 'contain';
+          wrap.classList.add('wide');
+        }
+      });
+
       function open(){ openClip(v); }
       wrap.addEventListener('click', open);
       wrap.addEventListener('keydown', function(e){
@@ -1942,9 +1974,16 @@
     var ov = document.getElementById('clipOverlay');
     if (!ov) return;
 
-    document.getElementById('clipVideo').innerHTML =
+    var player = document.getElementById('clipVideo');
+    player.classList.remove('wide');
+    player.innerHTML =
       '<video src="' + v.url + '" controls playsinline autoplay loop ' +
       'style="width:100%;height:100%;object-fit:contain;position:absolute;inset:0;"></video>';
+    player.querySelector('video').addEventListener('loadedmetadata', function(){
+      // Give landscape clips a wide box so they fill it instead of sitting in
+      // a thin letterboxed strip inside a tall 9:16 frame.
+      if (this.videoWidth > this.videoHeight) player.classList.add('wide');
+    });
 
     var promptBox = document.getElementById('clipPrompt');
     var moreBtn = document.getElementById('clipMore');
